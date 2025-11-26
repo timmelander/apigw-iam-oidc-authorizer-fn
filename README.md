@@ -1,4 +1,4 @@
-# OCI API Gateway + + IAM + OIDC Authentication
+# OCI API Gateway + IAM + OIDC Authentication
 
 A reference implementation for securing web applications using OCI API Gateway with OCI IAM Identity Domains for OpenID Connect (OIDC) authentication.
 
