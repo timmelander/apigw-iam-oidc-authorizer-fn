@@ -22,28 +22,28 @@ The solution implements **session-based authentication** using OIDC Authorizatio
 ### Flow 1: First Visit (No Session) → Redirect to Login
 
 ```
-┌─────────┐       ┌─────────────┐       ┌────────────┐       ┌───────┐
-│ Browser │       │ API Gateway │       │ apigw_authzr│      │ Cache │
-└────┬────┘       └──────┬──────┘       └──────┬─────┘       └───┬───┘
-     │                   │                     │                 │
-     │ 1. GET /welcome   │                     │                 │
-     │──────────────────▶│                     │                 │
-     │                   │                     │                 │
-     │                   │ 2. Call authorizer  │                 │
-     │                   │    (no cookie)      │                 │
-     │                   │────────────────────▶│                 │
-     │                   │                     │                 │
-     │                   │                     │ 3. No session   │
-     │                   │                     │    cookie found │
-     │                   │                     │                 │
-     │                   │ 4. {active: false}  │                 │
-     │                   │◀────────────────────│                 │
-     │                   │                     │                 │
-     │ 5. 302 /auth/login│                     │                 │
-     │    ?return_to=    │                     │                 │
-     │    /welcome       │                     │                 │
-     │◀──────────────────│                     │                 │
-     │                   │                     │                 │
+┌─────────┐       ┌─────────────┐       ┌──────────────┐      ┌───────┐
+│ Browser │       │ API Gateway │       │ apigw_authzr│       │ Cache │
+└────┬────┘       └──────┬──────┘       └──────┬───────┘      └───┬───┘
+     │                   │                     │                  │
+     │ 1. GET /welcome   │                     │                  │
+     │──────────────────▶│                     │                  │
+     │                   │                     │                  │
+     │                   │ 2. Call authorizer  │                  │
+     │                   │    (no cookie)      │                  │
+     │                   │────────────────────▶│                  │
+     │                   │                     │                  │
+     │                   │                     │ 3. No session    │
+     │                   │                     │    cookie found  │
+     │                   │                     │                  │
+     │                   │ 4. {active: false}  │                  │
+     │                   │◀────────────────────│                  │
+     │                   │                     │                  │
+     │ 5. 302 /auth/login│                     │                  │
+     │    ?return_to=    │                     │                  │
+     │    /welcome       │                     │                  │
+     │◀──────────────────│                     │                  │
+     │                   │                     │                  │
 ```
 
 ### Flow 2: Login Initiation (OIDC Authorize)
@@ -69,19 +69,19 @@ The solution implements **session-based authentication** using OIDC Authorizatio
      │                   │                   │ 4. Generate:   │             │            │
      │                   │                   │  • state       │             │            │
      │                   │                   │  • nonce       │             │            │
-     │                   │                   │  • code_verifier              │            │
-     │                   │                   │  • code_challenge             │            │
+     │                   │                   │  • code_verifier             │            │
+     │                   │                   │  • code_challenge            │            │
      │                   │                   │                │             │            │
      │                   │                   │ 5. Store state │             │            │
      │                   │                   │    {code_verifier,           │            │
      │                   │                   │     return_to} │             │            │
-     │                   │                   │────────────────────────────▶│            │
+     │                   │                   │─────────────────────────────▶│            │
      │                   │                   │                │             │            │
      │                   │ 6. 302 to IdP     │                │             │            │
      │◀──────────────────│◀──────────────────│                │             │            │
      │                   │                   │                │             │            │
-     │ 7. GET /authorize?client_id=...&code_challenge=...&state=...        │            │
-     │────────────────────────────────────────────────────────────────────────────────▶│
+     │ 7. GET /authorize?client_id=...&code_challenge=...&state=...         │            │
+     │──────────────────────────────────────────────────────────────────────────────────▶│
      │                   │                   │                │             │            │
 ```
 
@@ -114,148 +114,148 @@ The solution implements **session-based authentication** using OIDC Authorizatio
 ### Flow 4: OAuth Callback (Token Exchange & Session Creation)
 
 ```
-┌─────────┐      ┌────────────┐      ┌─────────────┐      ┌───────┐      ┌───────┐      ┌─────┐
-│ Browser │      │ API Gateway│      │oidc_callback│      │ Vault │      │ Cache │      │ IdP │
-└────┬────┘      └─────┬──────┘      └──────┬──────┘      └───┬───┘      └───┬───┘      └──┬──┘
-     │                 │                    │                 │              │             │
-     │ 1. GET /auth/callback?code=X&state=Y │                 │              │             │
-     │────────────────▶│                    │                 │              │             │
-     │                 │                    │                 │              │             │
-     │                 │ 2. Route to        │                 │              │             │
-     │                 │    oidc_callback   │                 │              │             │
-     │                 │───────────────────▶│                 │              │             │
-     │                 │                    │                 │              │             │
-     │                 │                    │ 3. Get state:Y  │              │             │
+┌─────────┐      ┌────────────┐      ┌─────────────┐      ┌───────┐       ┌───────┐      ┌─────┐
+│ Browser │      │ API Gateway│      │oidc_callback│      │ Vault │       │ Cache │      │ IdP │
+└────┬────┘      └─────┬──────┘      └──────┬──────┘      └───┬───┘       └───┬───┘      └──┬──┘
+     │                 │                    │                 │               │             │
+     │ 1. GET /auth/callback?code=X&state=Y │                 │               │             │
+     │────────────────▶│                    │                 │               │             │
+     │                 │                    │                 │               │             │
+     │                 │ 2. Route to        │                 │               │             │
+     │                 │    oidc_callback   │                 │               │             │
+     │                 │───────────────────▶│                 │               │             │
+     │                 │                    │                 │               │             │
+     │                 │                    │ 3. Get state:Y  │               │             │
      │                 │                    │────────────────────────────────▶│             │
      │                 │                    │◀────────────────────────────────│             │
-     │                 │                    │ {code_verifier, │              │             │
-     │                 │                    │  return_to}     │              │             │
-     │                 │                    │                 │              │             │
-     │                 │                    │ 4. Get client_id│              │             │
+     │                 │                    │ {code_verifier, │               │             │
+     │                 │                    │  return_to}     │               │             │
+     │                 │                    │                 │               │             │
+     │                 │                    │ 4. Get client_id│               │             │
      │                 │                    │    & client_secret              │             │
-     │                 │                    │    from Vault   │              │             │
-     │                 │                    │────────────────▶│              │             │
-     │                 │                    │◀────────────────│              │             │
-     │                 │                    │                 │              │             │
-     │                 │                    │ 5. POST /token  │              │             │
-     │                 │                    │    (code, verifier,            │             │
-     │                 │                    │     client_id,  │              │             │
-     │                 │                    │     client_secret)             │             │
-     │                 │                    │───────────────────────────────────────────▶│
-     │                 │                    │                 │              │             │
-     │                 │                    │◀───────────────────────────────────────────│
-     │                 │                    │ {id_token,      │              │             │
-     │                 │                    │  access_token}  │              │             │
-     │                 │                    │                 │              │             │
+     │                 │                    │    from Vault   │               │             │
+     │                 │                    │────────────────▶│               │             │
+     │                 │                    │◀────────────────│               │             │
+     │                 │                    │                 │               │             │
+     │                 │                    │ 5. POST /token  │               │             │
+     │                 │                    │    (code, verifier,             │             │
+     │                 │                    │     client_id,  │               │             │
+     │                 │                    │     client_secret)              │             │
+     │                 │                    │──────────────────────────────────────────────▶│
+     │                 │                    │                 │               │             │
+     │                 │                    │◀──────────────────────────────────────────────│
+     │                 │                    │ {id_token,      │               │             │
+     │                 │                    │  access_token}  │               │             │
+     │                 │                    │                 │               │             │
      │                 │                    │ 6. Validate tokens              │             │
      │                 │                    │    Extract claims               │             │
-     │                 │                    │                 │              │             │
-     │                 │                    │ 7. Get pepper   │              │             │
-     │                 │                    │    from Vault   │              │             │
-     │                 │                    │────────────────▶│              │             │
-     │                 │                    │◀────────────────│              │             │
-     │                 │                    │                 │              │             │
+     │                 │                    │                 │               │             │
+     │                 │                    │ 7. Get pepper   │               │             │
+     │                 │                    │    from Vault   │               │             │
+     │                 │                    │────────────────▶│               │             │
+     │                 │                    │◀────────────────│               │             │
+     │                 │                    │                 │               │             │
      │                 │                    │ 8. Generate session_id          │             │
      │                 │                    │    Derive key (HKDF + pepper)   │             │
      │                 │                    │    Encrypt session (AES-256-GCM)│             │
-     │                 │                    │                 │              │             │
+     │                 │                    │                 │               │             │
      │                 │                    │ 9. Store encrypted              │             │
-     │                 │                    │    session      │              │             │
+     │                 │                    │    session      │               │             │
      │                 │                    │────────────────────────────────▶│             │
-     │                 │                    │                 │              │             │
+     │                 │                    │                 │               │             │
      │                 │                    │ 10. Delete state:Y              │             │
      │                 │                    │────────────────────────────────▶│             │
-     │                 │                    │                 │              │             │
-     │ 11. 302 to return_to (e.g., /welcome)│                 │              │             │
-     │     Set-Cookie: session_id=...       │                 │              │             │
-     │◀────────────────│◀───────────────────│                 │              │             │
-     │                 │                    │                 │              │             │
+     │                 │                    │                 │               │             │
+     │ 11. 302 to return_to (e.g., /welcome)│                 │               │             │
+     │     Set-Cookie: session_id=...       │                 │               │             │
+     │◀────────────────│◀───────────────────│                 │               │             │
+     │                 │                    │                 │               │             │
 ```
 
 ### Flow 5: Authenticated Request (Session Validation)
 
 ```
-┌─────────┐      ┌────────────┐      ┌────────────┐      ┌───────┐      ┌───────┐      ┌─────────┐
-│ Browser │      │ API Gateway│      │apigw_authzr│      │ Vault │      │ Cache │      │ Backend │
-└────┬────┘      └─────┬──────┘      └──────┬─────┘      └───┬───┘      └───┬───┘      └────┬────┘
-     │                 │                    │                │              │               │
-     │ 1. GET /welcome │                    │                │              │               │
-     │    Cookie:      │                    │                │              │               │
-     │    session_id=X │                    │                │              │               │
-     │────────────────▶│                    │                │              │               │
-     │                 │                    │                │              │               │
-     │                 │ 2. Call authorizer │                │              │               │
-     │                 │    (Cookie, UA)    │                │              │               │
-     │                 │───────────────────▶│                │              │               │
-     │                 │                    │                │              │               │
-     │                 │                    │ 3. Get encrypted              │               │
-     │                 │                    │    session:X   │              │               │
+┌─────────┐      ┌────────────┐      ┌────────────┐      ┌───────┐       ┌───────┐      ┌─────────┐
+│ Browser │      │ API Gateway│      │apigw_authzr│      │ Vault │       │ Cache │      │ Backend │
+└────┬────┘      └─────┬──────┘      └──────┬─────┘      └───┬───┘       └───┬───┘      └────┬────┘
+     │                 │                    │                │               │               │
+     │ 1. GET /welcome │                    │                │               │               │
+     │    Cookie:      │                    │                │               │               │
+     │    session_id=X │                    │                │               │               │
+     │────────────────▶│                    │                │               │               │
+     │                 │                    │                │               │               │
+     │                 │ 2. Call authorizer │                │               │               │
+     │                 │    (Cookie, UA)    │                │               │               │
+     │                 │───────────────────▶│                │               │               │
+     │                 │                    │                │               │               │
+     │                 │                    │ 3. Get encrypted               │               │
+     │                 │                    │    session:X   │               │               │
      │                 │                    │───────────────────────────────▶│               │
      │                 │                    │◀───────────────────────────────│               │
-     │                 │                    │ {ciphertext,   │              │               │
-     │                 │                    │  tag, nonce}   │              │               │
-     │                 │                    │                │              │               │
-     │                 │                    │ 4. Get pepper  │              │               │
-     │                 │                    │    from Vault  │              │               │
-     │                 │                    │───────────────▶│              │               │
-     │                 │                    │◀───────────────│              │               │
-     │                 │                    │                │              │               │
-     │                 │                    │ 5. Derive key (HKDF + pepper) │               │
-     │                 │                    │    Decrypt session            │               │
-     │                 │                    │    Validate User-Agent        │               │
-     │                 │                    │    Check expiry               │               │
-     │                 │                    │                │              │               │
-     │                 │ 6. {active: true,  │                │              │               │
-     │                 │     context: {     │                │              │               │
-     │                 │       sub, email,  │                │              │               │
-     │                 │       name, groups │                │              │               │
-     │                 │     }}             │                │              │               │
-     │                 │◀───────────────────│                │              │               │
-     │                 │                    │                │              │               │
-     │                 │ 7. Forward to backend               │              │               │
-     │                 │    + X-User-Sub: ...                │              │               │
-     │                 │    + X-User-Email: ...              │              │               │
-     │                 │    + X-User-Name: ...               │              │               │
-     │                 │    + X-User-Groups: ...             │              │               │
-     │                 │───────────────────────────────────────────────────────────────────▶│
-     │                 │                    │                │              │               │
-     │                 │◀───────────────────────────────────────────────────────────────────│
-     │ 8. 200 OK + HTML│                    │                │              │               │
-     │◀────────────────│                    │                │              │               │
-     │                 │                    │                │              │               │
+     │                 │                    │ {ciphertext,   │               │               │
+     │                 │                    │  tag, nonce}   │               │               │
+     │                 │                    │                │               │               │
+     │                 │                    │ 4. Get pepper  │               │               │
+     │                 │                    │    from Vault  │               │               │
+     │                 │                    │───────────────▶│               │               │
+     │                 │                    │◀───────────────│               │               │
+     │                 │                    │                │               │               │
+     │                 │                    │ 5. Derive key (HKDF + pepper)  │               │
+     │                 │                    │    Decrypt session             │               │
+     │                 │                    │    Validate User-Agent         │               │
+     │                 │                    │    Check expiry                │               │
+     │                 │                    │                │               │               │
+     │                 │ 6. {active: true,  │                │               │               │
+     │                 │     context: {     │                │               │               │
+     │                 │       sub, email,  │                │               │               │
+     │                 │       name, groups │                │               │               │
+     │                 │     }}             │                │               │               │
+     │                 │◀───────────────────│                │               │               │
+     │                 │                    │                │               │               │
+     │                 │ 7. Forward to backend               │               │               │
+     │                 │    + X-User-Sub: ...                │               │               │
+     │                 │    + X-User-Email: ...              │               │               │
+     │                 │    + X-User-Name: ...               │               │               │
+     │                 │    + X-User-Groups: ...             │               │               │
+     │                 │────────────────────────────────────────────────────────────────────▶│
+     │                 │                    │                │               │               │
+     │                 │◀────────────────────────────────────────────────────────────────────│
+     │ 8. 200 OK + HTML│                    │                │               │               │
+     │◀────────────────│                    │                │               │               │
+     │                 │                    │                │               │               │
 ```
 
 ### Flow 6: Logout
 
 ```
-┌─────────┐      ┌────────────┐      ┌───────────┐      ┌───────┐      ┌─────┐
-│ Browser │      │ API Gateway│      │oidc_logout│      │ Cache │      │ IdP │
-└────┬────┘      └─────┬──────┘      └─────┬─────┘      └───┬───┘      └──┬──┘
-     │                 │                   │                │             │
-     │ 1. GET /auth/logout                 │                │             │
-     │    Cookie: session_id=X             │                │             │
-     │────────────────▶│                   │                │             │
-     │                 │                   │                │             │
-     │                 │ 2. Route to       │                │             │
-     │                 │    oidc_logout    │                │             │
-     │                 │──────────────────▶│                │             │
-     │                 │                   │                │             │
-     │                 │                   │ 3. Delete      │             │
-     │                 │                   │    session:X   │             │
-     │                 │                   │───────────────▶│             │
-     │                 │                   │                │             │
-     │ 4. 302 to IdP /logout               │                │             │
-     │    Set-Cookie: session_id=;         │                │             │
-     │    Max-Age=0; Path=/                │                │             │
-     │◀────────────────│◀──────────────────│                │             │
-     │                 │                   │                │             │
-     │ 5. GET IdP /logout?post_logout_redirect_uri=...      │             │
+┌─────────┐      ┌────────────┐      ┌───────────┐      ┌───────┐       ┌─────┐
+│ Browser │      │ API Gateway│      │oidc_logout│      │ Cache │       │ IdP │
+└────┬────┘      └─────┬──────┘      └─────┬─────┘      └───┬───┘       └──┬──┘
+     │                 │                   │                │              │
+     │ 1. GET /auth/logout                 │                │              │
+     │    Cookie: session_id=X             │                │              │
+     │────────────────▶│                   │                │              │
+     │                 │                   │                │              │
+     │                 │ 2. Route to       │                │              │
+     │                 │    oidc_logout    │                │              │
+     │                 │──────────────────▶│                │              │
+     │                 │                   │                │              │
+     │                 │                   │ 3. Delete      │              │
+     │                 │                   │    session:X   │              │
+     │                 │                   │───────────────▶│              │
+     │                 │                   │                │              │
+     │ 4. 302 to IdP /logout               │                │              │
+     │    Set-Cookie: session_id=;         │                │              │
+     │    Max-Age=0; Path=/                │                │              │
+     │◀────────────────│◀──────────────────│                │              │
+     │                 │                   │                │              │
+     │ 5. GET IdP /logout?post_logout_redirect_uri=...      │              │
      │────────────────────────────────────────────────────────────────────▶│
-     │                 │                   │                │             │
-     │ 6. 302 to post_logout_redirect_uri  │                │             │
-     │    (e.g., /logged-out.html)         │                │             │
+     │                 │                   │                │              │
+     │ 6. 302 to post_logout_redirect_uri  │                │              │
+     │    (e.g., /logged-out.html)         │                │              │
      │◀────────────────────────────────────────────────────────────────────│
-     │                 │                   │                │             │
+     │                 │                   │                │              │
 ```
 
 ## Security Mechanisms
