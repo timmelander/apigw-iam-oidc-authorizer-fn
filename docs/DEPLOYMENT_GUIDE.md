@@ -522,8 +522,14 @@ In OCI Console:
 
 To include user profile data in tokens:
 
-1. Navigate to **Settings** → **Custom claims**
-2. Create claims:
+> **Important:** Custom Claims in OCI Identity Domains must be configured via the REST API - there is no UI option in the OCI Console. See the official Oracle documentation: [Managing Custom Claims](https://docs.oracle.com/en-us/iaas/Content/Identity/api-getstarted/custom-claims-token.htm)
+
+1. Use the helper script provided in this project:
+   ```bash
+   python scripts/create_groups_claim.py
+   ```
+
+2. Or create claims manually via the Identity Domains REST API with the following configuration:
 
 | Claim Name | Value | Include in ID Token |
 |------------|-------|---------------------|
@@ -531,6 +537,8 @@ To include user profile data in tokens:
 | `user_given_name` | `user.givenName` | Yes |
 | `user_family_name` | `user.familyName` | Yes |
 | `user_groups` | `user.groups[*].name` | Yes |
+
+For more details on Custom Claims and why they are needed, see [FAQ: What are Custom Claims?](./FAQ.md#what-are-custom-claims-and-why-does-this-solution-need-them)
 
 ### 6.5 Update Client Credentials Secret
 
