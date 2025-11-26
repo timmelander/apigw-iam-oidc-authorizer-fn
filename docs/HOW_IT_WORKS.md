@@ -22,28 +22,28 @@ The solution implements **session-based authentication** using OIDC Authorizatio
 ### Flow 1: First Visit (No Session) → Redirect to Login
 
 ```
-┌─────────┐       ┌─────────────┐       ┌──────────────┐      ┌───────┐
-│ Browser │       │ API Gateway │       │ apigw_authzr │      │ Cache │
-└────┬────┘       └──────┬──────┘       └──────┬───────┘      └───┬───┘
-     │                   │                     │                  │
-     │ 1. GET /welcome   │                     │                  │
-     │──────────────────▶│                     │                  │
-     │                   │                     │                  │
-     │                   │ 2. Call authorizer  │                  │
-     │                   │    (no cookie)      │                  │
-     │                   │────────────────────▶│                  │
-     │                   │                     │                  │
-     │                   │                     │ 3. No session    │
-     │                   │                     │    cookie found  │
-     │                   │                     │                  │
-     │                   │ 4. {active: false}  │                  │
-     │                   │◀────────────────────│                  │
-     │                   │                     │                  │
-     │ 5. 302 /auth/login│                     │                  │
-     │    ?return_to=    │                     │                  │
-     │    /welcome       │                     │                  │
-     │◀──────────────────│                     │                  │
-     │                   │                     │                  │
+┌─────────┐       ┌─────────────┐       ┌──────────────┐
+│ Browser │       │ API Gateway │       │ apigw_authzr │
+└────┬────┘       └──────┬──────┘       └──────┬───────┘
+     │                   │                     │
+     │ 1. GET /welcome   │                     │
+     │──────────────────▶│                     │
+     │                   │                     │
+     │                   │ 2. Call authorizer  │
+     │                   │    (no cookie)      │
+     │                   │────────────────────▶│
+     │                   │                     │
+     │                   │                     │ 3. No session
+     │                   │                     │    cookie found
+     │                   │                     │
+     │                   │ 4. {active: false}  │
+     │                   │◀────────────────────│
+     │                   │                     │
+     │ 5. 302 /auth/login│                     │
+     │    ?return_to=    │                     │
+     │    /welcome       │                     │
+     │◀──────────────────│                     │
+     │                   │                     │
 ```
 
 ### Flow 2: Login Initiation (OIDC Authorize)
