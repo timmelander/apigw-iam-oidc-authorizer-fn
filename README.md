@@ -8,9 +8,9 @@ This solution provides session-based authentication for protecting web applicati
 
 - **OCI IAM Identity Domain** for secure Identity Provider
 - **OIDC Authorization Code Flow with PKCE** for secure authentication
-- **Custom Authorizer Function** for session validation
 - **OCI Cache (Redis)** for secure session storage
 - **OCI Vault** for secrets management
+- **Custom Authorizer Function** for session validation
 - **Automatic login redirect** for unauthenticated requests
 
 ## Demo
