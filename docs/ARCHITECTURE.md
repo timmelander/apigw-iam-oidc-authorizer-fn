@@ -131,20 +131,27 @@ Protected routes use `AUTHENTICATION_ONLY` authorization policy. When the author
 ### Session Cookie Flow
 
 ```
-Browser                    API Gateway              Functions           Cache
-   │                           │                        │                 │
-   │──Cookie: session_id=X────▶│                        │                 │
-   │                           │──Call apigw_authzr────▶│                 │
-   │                           │   (Cookie, User-Agent) │                 │
-   │                           │                        │──GET session:X─▶│
-   │                           │                        │◀─encrypted data─│
-   │                           │                        │                 │
-   │                           │                        │ Decrypt & validate
-   │                           │                        │                 │
-   │                           │◀─{active:true, claims}─│                 │
-   │                           │                        │                 │
-   │                           │──Forward to backend───▶│                 │
-   │                           │   + X-User-* headers   │                 │
+Browser                 API Gateway           apigw_authzr         Vault            Cache
+   │                         │                      │                 │                │
+   │──Cookie: session_id=X──▶│                      │                 │                │
+   │                         │──Call authorizer────▶│                 │                │
+   │                         │  (Cookie, User-Agent)│                 │                │
+   │                         │                      │                 │                │
+   │                         │                      │──GET session:X─────────────────▶│
+   │                         │                      │◀─encrypted data─────────────────│
+   │                         │                      │                 │                │
+   │                         │                      │──Get pepper────▶│                │
+   │                         │                      │◀────────────────│                │
+   │                         │                      │                 │                │
+   │                         │                      │ Derive key (HKDF + pepper)       │
+   │                         │                      │ Decrypt session                  │
+   │                         │                      │ Validate User-Agent              │
+   │                         │                      │ Check expiry                     │
+   │                         │                      │                 │                │
+   │                         │◀─{active:true,claims}│                 │                │
+   │                         │                      │                 │                │
+   │                         │──Forward to backend─▶│                 │                │
+   │                         │  + X-User-* headers  │                 │                │
 ```
 
 ### Secrets Access Flow
