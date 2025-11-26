@@ -7,6 +7,7 @@ A reference implementation for securing web applications using OCI API Gateway w
 This solution provides session-based authentication for protecting web applications behind OCI API Gateway. It implements:
 
 - **OCI IAM Identity Domain** for secure Identity Provider
+- **OCI API Gateway** to protect backend applications
 - **OIDC Authorization Code Flow with PKCE** for secure authentication
 - **OCI Cache (Redis)** for secure session storage
 - **OCI Vault** for secrets management
