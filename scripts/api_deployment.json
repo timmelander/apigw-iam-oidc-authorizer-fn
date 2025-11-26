@@ -1,0 +1,290 @@
+{
+  "loggingPolicies": {
+    "executionLog": {
+      "isEnabled": true,
+      "logLevel": "INFO"
+    }
+  },
+  "requestPolicies": {
+    "authentication": {
+      "type": "CUSTOM_AUTHENTICATION",
+      "functionId": "<apigw-authzr-fn-ocid>",
+      "isAnonymousAccessAllowed": true,
+      "parameters": {
+        "Cookie": "request.headers[Cookie]",
+        "User-Agent": "request.headers[User-Agent]"
+      },
+      "validationFailurePolicy": {
+        "type": "MODIFY_RESPONSE",
+        "responseCode": "302",
+        "responseHeaderTransformations": {
+          "setHeaders": {
+            "items": [
+              {
+                "name": "Location",
+                "values": ["/auth/login"],
+                "ifExists": "OVERWRITE"
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+  "routes": [
+    {
+      "path": "/",
+      "methods": ["GET"],
+      "backend": {
+        "type": "HTTP_BACKEND",
+        "url": "http://<backend-ip>/index.html",
+        "connectTimeoutInSeconds": 10,
+        "readTimeoutInSeconds": 10,
+        "sendTimeoutInSeconds": 10
+      },
+      "requestPolicies": {
+        "authorization": {
+          "type": "ANONYMOUS"
+        }
+      }
+    },
+    {
+      "path": "/health",
+      "methods": ["GET"],
+      "backend": {
+        "type": "ORACLE_FUNCTIONS_BACKEND",
+        "functionId": "<health-fn-ocid>"
+      },
+      "requestPolicies": {
+        "authorization": {
+          "type": "ANONYMOUS"
+        }
+      }
+    },
+    {
+      "path": "/auth/login",
+      "methods": ["GET"],
+      "backend": {
+        "type": "ORACLE_FUNCTIONS_BACKEND",
+        "functionId": "<oidc-authn-fn-ocid>"
+      },
+      "requestPolicies": {
+        "authorization": {
+          "type": "ANONYMOUS"
+        }
+      }
+    },
+    {
+      "path": "/auth/callback",
+      "methods": ["GET"],
+      "backend": {
+        "type": "ORACLE_FUNCTIONS_BACKEND",
+        "functionId": "<oidc-callback-fn-ocid>"
+      },
+      "requestPolicies": {
+        "authorization": {
+          "type": "ANONYMOUS"
+        },
+        "headerTransformations": {
+          "setHeaders": {
+            "items": [
+              {
+                "name": "X-Query-Code",
+                "values": ["${request.query[code]}"],
+                "ifExists": "OVERWRITE"
+              },
+              {
+                "name": "X-Query-State",
+                "values": ["${request.query[state]}"],
+                "ifExists": "OVERWRITE"
+              },
+              {
+                "name": "X-Query-Error",
+                "values": ["${request.query[error]}"],
+                "ifExists": "OVERWRITE"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "path": "/auth/logout",
+      "methods": ["GET", "POST"],
+      "backend": {
+        "type": "ORACLE_FUNCTIONS_BACKEND",
+        "functionId": "<oidc-logout-fn-ocid>"
+      },
+      "requestPolicies": {
+        "authorization": {
+          "type": "ANONYMOUS"
+        }
+      }
+    },
+    {
+      "path": "/welcome",
+      "methods": ["GET"],
+      "backend": {
+        "type": "HTTP_BACKEND",
+        "url": "http://<backend-ip>/cgi-bin/userinfo.cgi",
+        "connectTimeoutInSeconds": 30,
+        "readTimeoutInSeconds": 30,
+        "sendTimeoutInSeconds": 30
+      },
+      "requestPolicies": {
+        "authorization": {
+          "type": "AUTHENTICATION_ONLY"
+        },
+        "headerTransformations": {
+          "setHeaders": {
+            "items": [
+              {
+                "name": "X-User-Sub",
+                "values": ["${request.auth[sub]}"],
+                "ifExists": "OVERWRITE"
+              },
+              {
+                "name": "X-User-Email",
+                "values": ["${request.auth[email]}"],
+                "ifExists": "OVERWRITE"
+              },
+              {
+                "name": "X-User-Name",
+                "values": ["${request.auth[name]}"],
+                "ifExists": "OVERWRITE"
+              },
+              {
+                "name": "X-User-Username",
+                "values": ["${request.auth[preferred_username]}"],
+                "ifExists": "OVERWRITE"
+              },
+              {
+                "name": "X-User-Given-Name",
+                "values": ["${request.auth[given_name]}"],
+                "ifExists": "OVERWRITE"
+              },
+              {
+                "name": "X-User-Family-Name",
+                "values": ["${request.auth[family_name]}"],
+                "ifExists": "OVERWRITE"
+              },
+              {
+                "name": "X-User-Groups",
+                "values": ["${request.auth[groups]}"],
+                "ifExists": "OVERWRITE"
+              },
+              {
+                "name": "X-User-Session",
+                "values": ["${request.auth[session_id]}"],
+                "ifExists": "OVERWRITE"
+              },
+              {
+                "name": "X-Session-Created",
+                "values": ["${request.auth[session_iat]}"],
+                "ifExists": "OVERWRITE"
+              },
+              {
+                "name": "X-Raw-Claims",
+                "values": ["${request.auth[raw_claims]}"],
+                "ifExists": "OVERWRITE"
+              },
+              {
+                "name": "X-Userinfo-Claims",
+                "values": ["${request.auth[userinfo_claims]}"],
+                "ifExists": "OVERWRITE"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "path": "/logged-out",
+      "methods": ["GET"],
+      "backend": {
+        "type": "HTTP_BACKEND",
+        "url": "http://<backend-ip>/logged-out.html",
+        "connectTimeoutInSeconds": 10,
+        "readTimeoutInSeconds": 10,
+        "sendTimeoutInSeconds": 10
+      },
+      "requestPolicies": {
+        "authorization": {
+          "type": "ANONYMOUS"
+        }
+      }
+    },
+    {
+      "path": "/debug",
+      "methods": ["GET"],
+      "backend": {
+        "type": "HTTP_BACKEND",
+        "url": "http://<backend-ip>/cgi-bin/debug.cgi",
+        "connectTimeoutInSeconds": 30,
+        "readTimeoutInSeconds": 30,
+        "sendTimeoutInSeconds": 30
+      },
+      "requestPolicies": {
+        "authorization": {
+          "type": "AUTHENTICATION_ONLY"
+        },
+        "headerTransformations": {
+          "setHeaders": {
+            "items": [
+              {
+                "name": "X-User-Sub",
+                "values": ["${request.auth[sub]}"],
+                "ifExists": "OVERWRITE"
+              },
+              {
+                "name": "X-User-Email",
+                "values": ["${request.auth[email]}"],
+                "ifExists": "OVERWRITE"
+              },
+              {
+                "name": "X-User-Name",
+                "values": ["${request.auth[name]}"],
+                "ifExists": "OVERWRITE"
+              },
+              {
+                "name": "X-User-Username",
+                "values": ["${request.auth[preferred_username]}"],
+                "ifExists": "OVERWRITE"
+              },
+              {
+                "name": "X-User-Given-Name",
+                "values": ["${request.auth[given_name]}"],
+                "ifExists": "OVERWRITE"
+              },
+              {
+                "name": "X-User-Family-Name",
+                "values": ["${request.auth[family_name]}"],
+                "ifExists": "OVERWRITE"
+              },
+              {
+                "name": "X-User-Groups",
+                "values": ["${request.auth[groups]}"],
+                "ifExists": "OVERWRITE"
+              },
+              {
+                "name": "X-User-Session",
+                "values": ["${request.auth[session_id]}"],
+                "ifExists": "OVERWRITE"
+              },
+              {
+                "name": "X-Session-Created",
+                "values": ["${request.auth[session_iat]}"],
+                "ifExists": "OVERWRITE"
+              },
+              {
+                "name": "X-Raw-Claims",
+                "values": ["${request.auth[raw_claims]}"],
+                "ifExists": "OVERWRITE"
+              }
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

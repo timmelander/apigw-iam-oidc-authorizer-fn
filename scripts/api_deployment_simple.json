@@ -1,0 +1,50 @@
+{
+  "loggingPolicies": {
+    "executionLog": {
+      "isEnabled": true,
+      "logLevel": "INFO"
+    }
+  },
+  "routes": [
+    {
+      "path": "/health",
+      "methods": ["GET"],
+      "backend": {
+        "type": "ORACLE_FUNCTIONS_BACKEND",
+        "functionId": "<health-fn-ocid>"
+      }
+    },
+    {
+      "path": "/auth/login",
+      "methods": ["GET"],
+      "backend": {
+        "type": "ORACLE_FUNCTIONS_BACKEND",
+        "functionId": "<oidc-authn-fn-ocid>"
+      }
+    },
+    {
+      "path": "/auth/callback",
+      "methods": ["GET"],
+      "backend": {
+        "type": "ORACLE_FUNCTIONS_BACKEND",
+        "functionId": "<oidc-callback-fn-ocid>"
+      }
+    },
+    {
+      "path": "/auth/logout",
+      "methods": ["GET", "POST"],
+      "backend": {
+        "type": "ORACLE_FUNCTIONS_BACKEND",
+        "functionId": "<oidc-logout-fn-ocid>"
+      }
+    },
+    {
+      "path": "/{path*}",
+      "methods": ["GET", "POST", "PUT", "DELETE", "PATCH"],
+      "backend": {
+        "type": "ORACLE_FUNCTIONS_BACKEND",
+        "functionId": "<fallback-fn-ocid>"
+      }
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+fdk>=0.1.60
+oci>=2.100.0
+redis>=4.5.0
+cryptography>=40.0.0

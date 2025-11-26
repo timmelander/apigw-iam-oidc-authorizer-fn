@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OIDC Demo - Home</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+        .description {
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            text-align: left;
+        }
+        .btn {
+            display: inline-block;
+            padding: 14px 32px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+        .features {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 1px solid #eee;
+            text-align: left;
+        }
+        .features h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        .features ul {
+            list-style: none;
+        }
+        .features li {
+            padding: 8px 0;
+            color: #555;
+            font-size: 14px;
+        }
+        .features li::before {
+            content: "✓";
+            color: #667eea;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>OCI OIDC Demo</h1>
+        <p class="subtitle">API Gateway + Identity Domain Authentication</p>
+
+        <p class="description">
+            This demo application showcases session-based authentication using
+            OCI API Gateway with OCI IAM Identity Domains. Click below to access
+            the protected area.
+        </p>
+
+        <a href="/welcome" class="btn">Sign In to Continue</a>
+
+        <div class="features">
+            <h3>Security Features</h3>
+            <ul>
+                <li>OIDC Authorization Code Flow with PKCE</li>
+                <li>Server-side encrypted sessions</li>
+                <li>Multi-factor authentication support</li>
+                <li>Automatic session expiration</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

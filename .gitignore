@@ -1,0 +1,40 @@
+# Virtual environments
+venv/
+.venv/
+ENV/
+
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.Python
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.bak
+
+# Claude Code
+.claude/
+CLAUDE.md
+
+# Project local files (credentials, context)
+.project/
+
+# Local secrets/OCIDs (not for git)
+.env.local
+*.local.env
+
+# SAML/OAuth debug traces (may contain tokens)
+SAML-tracer-export*.json

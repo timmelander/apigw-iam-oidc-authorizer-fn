@@ -1,0 +1,27 @@
+# POC Terraform Variables Example
+# Copy this file to terraform.tfvars and fill in your values
+
+# OCI Authentication (uses ~/.oci/config by default)
+tenancy_ocid     = "ocid1.tenancy.oc1..aaaaaaaaexample"
+compartment_ocid = "ocid1.compartment.oc1..aaaaaaaaexample"
+region           = "us-chicago-1"
+
+# Resource naming
+label_prefix = "oidc-poc"
+
+# Network (use existing VCN subnets)
+public_subnet_ocid  = "ocid1.subnet.oc1.us-chicago-1.aaaaaaaaexample"
+private_subnet_ocid = "ocid1.subnet.oc1.us-chicago-1.aaaaaaaaexample"
+
+# OCI IAM Identity Domain
+oci_iam_base_url = "https://idcs-xxxxxxxx.identity.oraclecloud.com"
+oidc_client_id   = "your-client-id-from-confidential-app"
+oidc_client_secret = "your-client-secret-from-confidential-app"
+
+# Functions - OCIR repository
+# Build and push images first: fn deploy --app <app-name>
+container_repo   = "iad.ocir.io/your-namespace/oidc-fn-repo"
+function_version = "0.0.1"
+
+# Backend HTTP server (Apache or any HTTP server)
+backend_url = "http://10.0.1.100"

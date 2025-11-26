@@ -1,0 +1,5 @@
+fdk>=0.1.60
+redis>=4.5.0
+requests>=2.28.0
+oci>=2.90.0
+cryptography>=41.0.0

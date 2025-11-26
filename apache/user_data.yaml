@@ -1,0 +1,153 @@
+#cloud-config
+write_files:
+  - path: /etc/systemd/system/oci-cli-rp-auth.service
+    permissions: '0644'
+    content: |
+      [Unit]
+      Description=Configure OCI CLI for Instance Principal Authentication
+      After=network-online.target
+      Wants=network-online.target
+
+      [Service]
+      Type=oneshot
+      RemainAfterExit=true
+      ExecStart=/usr/bin/oci session authenticate --force --profile-name INSTANCE_PRINCIPAL --auth instance_principal
+      StandardOutput=journal
+      StandardError=journal
+
+      [Install]
+      WantedBy=multi-user.target
+
+  - path: /etc/httpd/conf.d/mtls_config.conf
+    permissions: '0644'
+    content: |
+      # This file will be populated with mTLS configuration by cloud-init
+      # after fetching certificates from OCI Vault.
+
+packages:
+  - httpd
+  - jq
+  - firewall-config
+
+runcmd:
+  # Install OCI CLI if not already present (might be on some images)
+  - |
+    if ! command -v oci &> /dev/null
+    then
+        curl -L https://raw.githubusercontent.com/oracle/oci-cli/master/scripts/install/install.sh | bash -s -- --accept-all-defaults --skip-oracle-client install --exec-dir /usr/local/bin
+    fi
+
+  # Enable and start OCI CLI instance principal authentication
+  - systemctl enable oci-cli-rp-auth.service
+  - systemctl start oci-cli-rp-auth.service
+  - systemctl daemon-reload
+
+  # Fetch mTLS client certificate and key from OCI Vault
+  - |
+    export OCI_CLI_AUTH=instance_principal
+    export OCI_CLI_PROFILE=INSTANCE_PRINCIPAL
+
+    # Replace with actual secret OCIDs from environment variables/metadata
+    MTLS_CLIENT_CERT_SECRET_OCID="${MTLS_CLIENT_CERT_SECRET_OCID}" # e.g., ocid1.vaultsecret.oc1..aaaa....
+    MTLS_CLIENT_KEY_SECRET_OCID="${MTLS_CLIENT_KEY_SECRET_OCID}"   # e.g., ocid1.vaultsecret.oc1..aaaa....
+
+    if [ -z "$MTLS_CLIENT_CERT_SECRET_OCID" ] || [ -z "$MTLS_CLIENT_KEY_SECRET_OCID" ]; then
+        echo "ERROR: mTLS secret OCIDs not provided. Skipping mTLS config."
+    else
+        echo "Fetching mTLS client certificate from Vault: $MTLS_CLIENT_CERT_SECRET_OCID"
+        oci secrets secret-bundle get --secret-id "$MTLS_CLIENT_CERT_SECRET_OCID" --query 'data."secret-bundle-content".content' --raw-output | base64 -d > /etc/pki/tls/certs/mtls_client.crt
+        echo "Fetching mTLS client key from Vault: $MTLS_CLIENT_KEY_SECRET_OCID"
+        oci secrets secret-bundle get --secret-id "$MTLS_CLIENT_KEY_SECRET_OCID" --query 'data."secret-bundle-content".content' --raw-output | base64 -d > /etc/pki/tls/private/mtls_client.key
+        
+        chmod 600 /etc/pki/tls/private/mtls_client.key
+        chown root:root /etc/pki/tls/private/mtls_client.key
+        
+        echo "mTLS certificates fetched successfully."
+
+                  # Configure Apache for mTLS server (verifying client certificates from API Gateway)
+                cat <<EOF > /etc/httpd/conf.d/mtls_config.conf
+        <VirtualHost *:443>
+            ServerName localhost
+            DocumentRoot /var/www/html
+        
+            SSLEngine on
+            SSLCertificateFile /etc/pki/tls/certs/localhost.crt   # Server cert for Apache
+            SSLCertificateKeyFile /etc/pki/tls/private/localhost.key # Server key for Apache
+            
+            # Request and verify client certificate from API Gateway
+            SSLVerifyClient require
+            SSLVerifyDepth 1
+            # SSLCACertificateFile /etc/pki/tls/certs/apigw_client_ca.crt
+            # For self-signed scenario, if API Gateway's client cert is self-signed,
+            # the API Gateway's client cert itself (apigw_server.crt generated in previous step) acts as the CA for trust
+            # This file will be copied by cloud-init after API Gateway's client cert is provided.
+            SSLCACertificateFile /etc/pki/tls/certs/apigw_client.crt 
+        
+            <Location />
+                # Require a valid client certificate
+                Require ssl
+                # Optionally, verify the Common Name (CN) of the client certificate
+                # Require expr %{SSL_CLIENT_S_DN_CN} eq "apigateway.yourdomain.com"
+            </Location>
+        
+            ErrorLog logs/ssl_error_log
+            TransferLog logs/ssl_access_log
+            LogLevel warn
+        </VirtualHost>
+        EOF
+            # Copy the API Gateway's client certificate (which acts as CA here for self-signed)
+            # This assumes the API Gateway's client certificate (apigw_server.crt) is also passed to the compute instance
+            # For now, it's a placeholder. In a real setup, this would come from Vault or be part of a proper PKI.
+            # We will assume this file is fetched from Vault like the mTLS cert and key for apache client.
+            # Hence, adding a placeholder for it, and assuming the same mechanism to fetch it from vault.
+            APIGW_CLIENT_CERT_OCID="${APIGW_CLIENT_CERT_OCID}" # ocid1.vaultsecret.oc1..aaaa....
+            if [ -z "$APIGW_CLIENT_CERT_OCID" ]; then
+                echo "ERROR: API Gateway Client Certificate OCID not provided. mTLS server config might fail."
+            else
+                echo "Fetching API Gateway Client Certificate from Vault: $APIGW_CLIENT_CERT_OCID"
+                oci secrets secret-bundle get --secret-id "$APIGW_CLIENT_CERT_OCID" --query 'data."secret-bundle-content".content' --raw-output | base64 -d > /etc/pki/tls/certs/apigw_client.crt
+                echo "API Gateway Client Certificate fetched successfully."
+            fi
+  # Configure default Apache page (placeholder for dynamic content)
+  - |
+    cat <<EOF > /var/www/html/index.html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Protected Application</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; margin-top: 50px; }
+        h1 { color: #333; }
+        p { color: #666; }
+    </style>
+</head>
+<body>
+    <h1>Welcome, User!</h1>
+    <p>This is a protected static web application.</p>
+    <p>Your session is active. (Sub claim would go here dynamically if processed by a proxy)</p>
+    <br/>
+    <a href="/logout">Logout</a>
+</body>
+</html>
+EOF
+
+  # Ensure Apache default SSL configuration is present (for SSLCertificateFile/KeyFile placeholders)
+  - |
+    if [ ! -f /etc/pki/tls/certs/localhost.crt ]; then
+        openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/pki/tls/private/localhost.key -out /etc/pki/tls/certs/localhost.crt -subj "/CN=localhost"
+    fi
+
+  # Configure Firewall
+  - systemctl enable --now firewalld
+  - firewall-cmd --zone=public --add-service=ssh --permanent
+  # Replace 0.0.0.0/0 with the actual CIDR block of the API Gateway private endpoint subnet
+  - firewall-cmd --zone=public --add-rich-rule='rule family="ipv4" source address="0.0.0.0/0" port port=443 protocol="tcp" accept' --permanent
+  - firewall-cmd --reload
+
+  # Ensure SSH key-only access (already often default for OCI images, but explicit)
+  - sed -i 's/^PasswordAuthentication yes/PasswordAuthentication no/g' /etc/ssh/sshd_config
+  - systemctl reload sshd
+
+  # Start and enable Apache HTTP Server
+  - systemctl enable httpd
+  - systemctl restart httpd

@@ -1,0 +1,82 @@
+# IAM Policies for OCI API Gateway OIDC Authorizer Reference Implementation
+
+# --- Before applying these policies, ensure the following resources exist and replace placeholders: ---
+#   - OCI_COMPARTMENT_ID: The OCID of the compartment where all resources reside.
+#   - OCI_TENANCY_OCID: The OCID of your tenancy.
+#   - OCI_IAM_DOMAIN_OCID: The OCID of your Identity Domain.
+#   - {vault_ocid}: OCID of the OCI Vault holding secrets.
+#   - {client_secret_ocid}: OCID of the secret containing the OIDC confidential application client secret.
+#   - {mtls_client_cert_secret_ocid}: OCID of the secret containing the mTLS client certificate.
+#   - {mtls_client_key_secret_ocid}: OCID of the secret containing the mTLS client key.
+#   - {function_app_name}: Name of the OCI Functions Application (e.g., 'oidc-auth-app').
+#   - {compute_display_name}: Display name of the Compute Instance.
+
+# --- Dynamic Groups ---
+# These dynamic groups will be created manually (or via Terraform later)
+# Rule: all {instance.compartment.id = 'OCI_COMPARTMENT_ID'}
+# Example for Functions Dynamic Group:
+# Name: OidcAuthFunctionsDynamicGroup
+# Matching Rule: ANY {resource.type = 'fnfunc', resource.compartment.id = 'OCI_COMPARTMENT_ID', resource.freeformTags.Name = '{function_app_name}'}
+# (This assumes all functions for this app have a freeform tag 'Name' with the function application name)
+
+# Example for Compute Dynamic Group:
+# Name: OidcAuthComputeDynamicGroup
+# Matching Rule: ALL {instance.id = 'ocid1.instance.oc1..xxxxxx'} (if targeting a specific instance)
+# OR for instances within a compartment with a specific tag:
+# Matching Rule: ANY {instance.compartment.id = 'OCI_COMPARTMENT_ID', instance.freeformTags.Name = '{compute_display_name}'}
+
+
+# --- Policies ---
+
+# Policy 1: Allow Functions to read secrets from OCI Vault
+# This policy grants the dynamic group containing the OCI Functions the permission to read the client secret
+# and mTLS certificates from the specified Vault.
+# Replace {dynamic_group_name_for_functions} with the actual name of your Functions Dynamic Group.
+# Replace {vault_compartment_id} with the OCID of the compartment where the Vault resides.
+# Replace {client_secret_ocid}, {mtls_client_cert_secret_ocid}, {mtls_client_key_secret_ocid} with actual secret OCIDs.
+# If targeting a specific secret:
+Allow dynamic-group {dynamic_group_name_for_functions} to read secret-family in compartment OCI_COMPARTMENT_ID where target.secret.id = '{client_secret_ocid}'
+Allow dynamic-group {dynamic_group_name_for_functions} to read secret-family in compartment OCI_COMPARTMENT_ID where target.secret.id = '{mtls_client_cert_secret_ocid}'
+Allow dynamic-group {dynamic_group_name_for_functions} to read secret-family in compartment OCI_COMPARTMENT_ID where target.secret.id = '{mtls_client_key_secret_ocid}'
+# Or if all secrets are in the same vault and compartment for this function:
+# Allow dynamic-group {dynamic_group_name_for_functions} to read secrets in compartment OCI_COMPARTMENT_ID where target.vault.id = '{vault_ocid}'
+
+
+# Policy 2: Allow API Gateway to invoke OCI Functions
+# This policy grants the API Gateway service the permission to invoke functions within the compartment.
+# Replace {api_gateway_compartment_id} with the OCID of the compartment where the API Gateway resides.
+# Replace {function_compartment_id} with the OCID of the compartment where the Functions Application resides.
+Allow gateway-family to use functions-family in compartment OCI_COMPARTMENT_ID
+
+
+# Policy 3: Allow Compute instance to read mTLS certificate and key from OCI Vault during cloud-init
+# This policy grants the dynamic group containing the Compute instance the permission to read the mTLS secrets from the Vault.
+# Replace {dynamic_group_name_for_compute} with the actual name of your Compute Dynamic Group.
+# Replace {vault_compartment_id} with the OCID of the compartment where the Vault resides.
+# Replace {mtls_client_cert_secret_ocid} and {mtls_client_key_secret_ocid} with actual secret OCIDs.
+Allow dynamic-group {dynamic_group_name_for_compute} to read secret-family in compartment OCI_COMPARTMENT_ID where target.secret.id = '{mtls_client_cert_secret_ocid}'
+Allow dynamic-group {dynamic_group_name_for_compute} to read secret-family in compartment OCI_COMPARTMENT_ID where target.secret.id = '{mtls_client_key_secret_ocid}'
+# Or if all secrets are in the same vault and compartment for this compute:
+# Allow dynamic-group {dynamic_group_name_for_compute} to read secrets in compartment OCI_COMPARTMENT_ID where target.vault.id = '{vault_ocid}'
+
+
+# Policy 4: Allow Functions to read OpenID Connect configuration from Identity Domain
+# This might not be strictly necessary if the OpenID configuration is publicly accessible,
+# but it's good practice for robust internal communication if needed.
+# This policy typically isn't directly related to 'read' a specific resource for OIDC discovery,
+# as OIDC endpoints are usually public. No specific policy for this for now.
+
+# Policy 5: Allow Network Resources to interact
+# These are typically handled by Network Security Groups (NSGs) and Security Lists (SLs)
+# in the VCN, not direct IAM policies on services.
+# - Ingress to Load Balancer from Internet (Public SL/NSG)
+# - Ingress to API Gateway Listener from Load Balancer (Private SL/NSG)
+# - Ingress to Compute (Apache) from API Gateway private endpoint subnet (Private SL/NSG)
+# - Egress from Functions to Identity Domain (Public Internet, via NAT Gateway if in private subnet)
+# - Egress from Compute to Identity Domain (Public Internet, via NAT Gateway if in private subnet)
+# No direct IAM policy required here, but the network setup is crucial.
+
+# Example for Function Invocation (if using principal other than resource principal)
+# (Not applicable for this project as it uses Resource Principal for Functions)
+# Allow group <group_name> to use func-function in compartment <compartment_name>
+# Allow group <group_name> to use fn-invocation in compartment <compartment_name>

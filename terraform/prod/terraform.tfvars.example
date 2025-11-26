@@ -1,0 +1,76 @@
+# apigw-iam-oidc-authorizer/terraform/environments/prod/terraform.tfvars.example
+
+# Example values for your production deployment.
+# Rename this file to 'terraform.tfvars' and fill in your actual OCI details.
+
+# OCI Tenancy and Compartment Details
+tenancy_ocid      = "ocid1.tenancy.oc1..aaaaaaaa..." # Replace with your tenancy OCID
+compartment_ocid  = "ocid1.compartment.oc1..aaaaaaaa..." # Replace with your compartment OCID
+region            = "us-chicago-1"
+
+# SSH Key for Compute Instance
+ssh_public_key    = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCq... your_key_comment" # Replace with your actual SSH public key content
+
+# Compute Instance Details
+compute_instance_shape = "VM.Standard.E4.Flex" # Default, can be changed
+# Find the Oracle Linux 10 image OCID for your region:
+# oci compute image list --compartment-id ocid1.compartment.oc1..aaaaaaaacmp --operating-system "Oracle Linux" --operating-system-version "10" --query 'data[?contains("display-name",`Oracle-Linux-10`)].id' --raw-output
+compute_image_ocid = "ocid1.image.oc1.us-chicago-1.aaaaaaaakw..." # Replace with your Oracle Linux 10 image OCID
+
+# Network Details
+vcn_ocid          = "ocid1.vcn.oc1.us-chicago-1.aaaaaaaa..." # Replace with your VCN OCID
+public_subnet_ocid = "ocid1.subnet.oc1.us-chicago-1.aaaaaaaa..." # Replace with your public subnet OCID
+private_subnet_ocid = "ocid1.subnet.oc1.us-chicago-1.aaaaaaaa..." # Replace with your private subnet OCID
+
+# OCI IAM Identity Domain and OIDC Application Details
+oci_iam_domain_ocid = "ocid1.domain.oc1..aaaaaaaa..." # Replace with your Identity Domain OCID
+oci_iam_base_url    = "https://idcs-xxxx.identity.oraclecloud.com" # Replace with your IAM domain base URL
+oidc_client_id      = "your-client-id-from-confidential-app" # Replace with your OIDC client ID
+
+
+# OCI Functions Container Registry Repository
+oci_functions_container_repo = "phx.ocir.io/your_tenancy_namespace/your_repo_name" # Replace with your OCIR repo path
+
+# Certificate and Key PEM contents (generated manually as per SOP)
+# Replace with the actual PEM content, including BEGIN/END markers.
+apache_mtls_client_cert_pem = <<-EOT
+-----BEGIN CERTIFICATE-----
+... paste content of apache_mtls_client.crt here ...
+-----END CERTIFICATE-----
+EOT
+
+apache_mtls_client_key_pem = <<-EOT
+-----BEGIN RSA PRIVATE KEY-----
+... paste content of apache_mtls_client.key here ...
+-----END RSA PRIVATE KEY-----
+EOT
+
+apigw_mtls_client_cert_pem = <<-EOT
+-----BEGIN CERTIFICATE-----
+... paste content of apigw_client.crt here ...
+-----END CERTIFICATE-----
+EOT
+
+apigw_mtls_client_key_pem = <<-EOT
+-----BEGIN RSA PRIVATE KEY-----
+... paste content of apigw_client.key here ...
+-----END RSA PRIVATE KEY-----
+EOT
+
+apache_server_cert_pem = <<-EOT
+-----BEGIN CERTIFICATE-----
+... paste content of apache_localhost.crt here (from Compute instance) ...
+-----END CERTIFICATE-----
+EOT
+
+# Load Balancer Subnet CIDR (e.g., from your VCN setup)
+load_balancer_subnet_cidr = "10.0.1.0/24" # Replace with the actual CIDR of your public subnet where Load Balancer is deployed.
+
+# API Gateway Subnet CIDR (e.g., from your VCN setup)
+api_gateway_subnet_cidr = "10.0.2.0/24" # Replace with the actual CIDR of your private subnet where API Gateway is deployed.
+
+# Load Balancer Domain Name (for self-signed certificate CN)
+lb_domain_name = "oidc-auth-lb.example.com" # Replace with your desired domain or LB IP
+
+# Label prefix for resource names
+label_prefix = "oidc-auth-prod" # Default, can be changed
