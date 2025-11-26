@@ -23,7 +23,7 @@ The solution implements **session-based authentication** using OIDC Authorizatio
 
 ```
 ┌─────────┐       ┌─────────────┐       ┌──────────────┐      ┌───────┐
-│ Browser │       │ API Gateway │       │ apigw_authzr│       │ Cache │
+│ Browser │       │ API Gateway │       │ apigw_authzr │      │ Cache │
 └────┬────┘       └──────┬──────┘       └──────┬───────┘      └───┬───┘
      │                   │                     │                  │
      │ 1. GET /welcome   │                     │                  │
