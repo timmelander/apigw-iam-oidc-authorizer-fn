@@ -650,29 +650,11 @@ echo "Deployment OCID: $DEPLOYMENT_OCID"
 
 > **Note:** The template file `api_deployment.template.json` should be committed to version control. The generated `api_deployment.json` (with actual OCIDs) should be in `.gitignore` to avoid committing sensitive OCIDs.
 
-### 5.4 Verify Deployment
+**Step 4: Verify deployment routes**
 
 ```bash
-# View full deployment details
-oci api-gateway deployment get --deployment-id $DEPLOYMENT_OCID
-
-# View just the specification (routes, policies, authentication)
-oci api-gateway deployment get --deployment-id $DEPLOYMENT_OCID | jq '.data.specification'
-
-# List all routes in the deployment
-oci api-gateway deployment get --deployment-id $DEPLOYMENT_OCID | jq '.data.specification.routes[].path'
-```
-
-Expected output for routes:
-```
-"/health"
-"/auth/login"
-"/auth/callback"
-"/auth/logout"
-"/welcome"
-"/logged-out"
-"/debug"
-"/"
+# List all routes configured in the deployment
+oci api-gateway deployment get --deployment-id $DEPLOYMENT_OCID | jq -r '.data.specification.routes[].path'
 ```
 
 ---
