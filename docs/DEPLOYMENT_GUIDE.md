@@ -612,27 +612,43 @@ sed -e "s|<apigw-authzr-fn-ocid>|$AUTHZR_FN_OCID|g" \
 grep -E "<[a-z-]+-ocid>|<backend-ip>" scripts/api_deployment.json && echo "ERROR: Placeholders not replaced!" || echo "OK: All placeholders replaced"
 ```
 
-**Step 3: Create the API Gateway deployment**
+**Step 3: Create or update the API Gateway deployment**
 
 ```bash
-oci api-gateway deployment create \
-  --compartment-id $COMPARTMENT_OCID \
-  --gateway-id $GATEWAY_OCID \
-  --display-name "oidc-auth-deployment" \
-  --path-prefix "/" \
-  --specification file://scripts/api_deployment.json
-
-# Wait for deployment to be ACTIVE, then get the OCID
+# Check if deployment already exists
 export DEPLOYMENT_OCID=$(oci api-gateway deployment list \
   --compartment-id $COMPARTMENT_OCID \
   --gateway-id $GATEWAY_OCID \
   --display-name "oidc-auth-deployment" \
   --query 'data.items[0].id' --raw-output)
 
+if [ -n "$DEPLOYMENT_OCID" ] && [ "$DEPLOYMENT_OCID" != "null" ]; then
+  echo "Deployment exists ($DEPLOYMENT_OCID). Updating..."
+  oci api-gateway deployment update \
+    --deployment-id $DEPLOYMENT_OCID \
+    --specification file://scripts/api_deployment.json \
+    --force
+else
+  echo "Creating new deployment..."
+  oci api-gateway deployment create \
+    --compartment-id $COMPARTMENT_OCID \
+    --gateway-id $GATEWAY_OCID \
+    --display-name "oidc-auth-deployment" \
+    --path-prefix "/" \
+    --specification file://scripts/api_deployment.json
+
+  # Get the new deployment OCID
+  export DEPLOYMENT_OCID=$(oci api-gateway deployment list \
+    --compartment-id $COMPARTMENT_OCID \
+    --gateway-id $GATEWAY_OCID \
+    --display-name "oidc-auth-deployment" \
+    --query 'data.items[0].id' --raw-output)
+fi
+
 echo "Deployment OCID: $DEPLOYMENT_OCID"
 ```
 
-> **Note:** The template file `api_deployment.template.json` should be committed to version control. The generated `api_deployment.json` (with actual OCIDs) should be in `.gitignore` to avoid committing sensitive OCIDs. If you need to update the deployment later, regenerate the JSON from the template and use `oci api-gateway deployment update --deployment-id $DEPLOYMENT_OCID --specification file://scripts/api_deployment.json --force`.
+> **Note:** The template file `api_deployment.template.json` should be committed to version control. The generated `api_deployment.json` (with actual OCIDs) should be in `.gitignore` to avoid committing sensitive OCIDs.
 
 ---
 
