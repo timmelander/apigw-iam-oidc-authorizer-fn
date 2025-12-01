@@ -907,7 +907,24 @@ echo "Backend IP: $BACKEND_IP"
 
 ### 9.4 Update API Deployment
 
-Update `scripts/api_deployment.json` with the backend IP address (`$BACKEND_IP`).
+Now that the backend is deployed, regenerate the deployment JSON and update the API Gateway:
+
+```bash
+# Regenerate api_deployment.json with actual BACKEND_IP (see Section 5.3 Step 2)
+sed -e "s|<apigw-authzr-fn-ocid>|$AUTHZR_FN_OCID|g" \
+    -e "s|<health-fn-ocid>|$HEALTH_FN_OCID|g" \
+    -e "s|<oidc-authn-fn-ocid>|$OIDC_AUTHN_FN_OCID|g" \
+    -e "s|<oidc-callback-fn-ocid>|$OIDC_CALLBACK_FN_OCID|g" \
+    -e "s|<oidc-logout-fn-ocid>|$OIDC_LOGOUT_FN_OCID|g" \
+    -e "s|<backend-ip>|$BACKEND_IP|g" \
+    scripts/api_deployment.template.json > scripts/api_deployment.json
+
+# Update the deployment
+oci api-gateway deployment update \
+  --deployment-id $DEPLOYMENT_OCID \
+  --specification file://scripts/api_deployment.json \
+  --force
+```
 
 ---
 

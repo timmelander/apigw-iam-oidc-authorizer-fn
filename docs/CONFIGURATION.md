@@ -135,7 +135,7 @@ The REST API allows you to:
 
 ### Deployment Specification
 
-The API Gateway deployment is configured via JSON specification (`scripts/api_deployment.json`).
+The API Gateway deployment is configured via JSON specification. The template file (`scripts/api_deployment.template.json`) contains placeholders that are replaced with actual OCIDs to generate `scripts/api_deployment.json`. See [Deployment Guide Section 5.3](./DEPLOYMENT_GUIDE.md#53-create-api-deployment) for details.
 
 #### Authentication Policy
 
@@ -296,6 +296,8 @@ cd functions/<name> && fn deploy --app apigw-oidc-app
 ```
 
 ### API Gateway Deployment
+
+First generate `api_deployment.json` from the template (see [Deployment Guide Section 5.3](./DEPLOYMENT_GUIDE.md#53-create-api-deployment)), then:
 
 ```bash
 oci api-gateway deployment update \

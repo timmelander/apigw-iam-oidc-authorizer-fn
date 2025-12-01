@@ -158,7 +158,10 @@ This solution provides session-based authentication for protecting web applicati
    ```
 
 4. **Update API Gateway deployment**
+
+   Generate the deployment JSON from template (replace placeholders with your OCIDs), then update:
    ```bash
+   # See Deployment Guide Section 5.3 for full instructions on generating api_deployment.json
    oci api-gateway deployment update --deployment-id <deployment_id> \
      --specification file://scripts/api_deployment.json --force
    ```

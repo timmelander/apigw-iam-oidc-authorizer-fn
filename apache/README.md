@@ -67,21 +67,13 @@ sudo ./install.sh
 
 ### 4. Update API Gateway
 
-Update `scripts/api_deployment.json` with the backend IP:
-
-```json
-{
-  "backend": {
-    "type": "HTTP_BACKEND",
-    "url": "http://<instance-ip>/",
-    ...
-  }
-}
-```
-
-Deploy the update:
+Set your backend IP and regenerate the deployment JSON from the template:
 
 ```bash
+export BACKEND_IP=<instance-ip>
+
+# Regenerate api_deployment.json (see Deployment Guide Section 5.3 for full command)
+# Then deploy the update:
 oci api-gateway deployment update \
   --deployment-id <deployment-ocid> \
   --specification file://scripts/api_deployment.json --force
@@ -181,7 +173,7 @@ sudo cp www/index.html /var/www/html/
 
 1. Create the HTML/CGI file in `www/`
 2. Update `install.sh` if needed
-3. Add the route to `scripts/api_deployment.json`
+3. Add the route to `scripts/api_deployment.template.json` and regenerate
 
 ### Styling
 
@@ -208,7 +200,7 @@ sudo tail -f /var/log/httpd/error_log
 
 ### Headers Not Appearing
 
-1. Check API Gateway header transformations in `scripts/api_deployment.json`
+1. Check API Gateway header transformations in `scripts/api_deployment.template.json`
 2. Use `/debug` page to see what headers are received
 3. Verify the authorizer is returning claims in the context
 

@@ -33,7 +33,8 @@ This guide explains how to modify, extend, and test the OCI API Gateway + OIDC A
 │       ├── func.yaml
 │       └── requirements.txt
 ├── scripts/
-│   ├── api_deployment.json           # Full API Gateway spec with authorizer
+│   ├── api_deployment.template.json  # API Gateway spec template (with placeholders)
+│   ├── api_deployment.json           # Generated spec (gitignored, contains actual OCIDs)
 │   ├── api_deployment_simple.json    # Minimal API Gateway spec (no auth)
 │   ├── create_confidential_app.py    # Create OAuth2 app in Identity Domain
 │   ├── create_groups_claim.py        # Add groups claim to OIDC tokens
@@ -212,7 +213,7 @@ curl -X POST http://localhost:8080 -d '{}'
 
 ### Adding a New Protected Route
 
-1. **Update API Gateway specification** (`scripts/api_deployment.json`):
+1. **Update the template** (`scripts/api_deployment.template.json`) - add the new route:
 
 ```json
 {
@@ -220,7 +221,7 @@ curl -X POST http://localhost:8080 -d '{}'
   "methods": ["GET"],
   "backend": {
     "type": "HTTP_BACKEND",
-    "url": "http://backend-ip/new-endpoint"
+    "url": "http://<backend-ip>/new-endpoint"
   },
   "requestPolicies": {
     "authorization": {
@@ -237,8 +238,10 @@ curl -X POST http://localhost:8080 -d '{}'
 }
 ```
 
-2. **Deploy update**:
+2. **Regenerate and deploy** (see [Deployment Guide Section 5.3](./DEPLOYMENT_GUIDE.md#53-create-api-deployment)):
 ```bash
+# Regenerate api_deployment.json from template with your OCIDs
+# Then update the deployment:
 oci api-gateway deployment update \
   --deployment-id <deployment-ocid> \
   --specification file://scripts/api_deployment.json --force

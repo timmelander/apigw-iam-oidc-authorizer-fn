@@ -493,6 +493,8 @@ done
 
 ### Update API Gateway Deployment
 
+First regenerate `api_deployment.json` from the template (see [Deployment Guide Section 5.3](./DEPLOYMENT_GUIDE.md#53-create-api-deployment)), then:
+
 ```bash
 oci api-gateway deployment update \
   --deployment-id <deployment-ocid> \
