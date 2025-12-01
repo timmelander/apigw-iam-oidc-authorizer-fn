@@ -2,6 +2,19 @@
 
 This guide helps diagnose and resolve common issues with the OCI API Gateway + OIDC Authentication solution.
 
+## Table of Contents
+
+- [Quick Diagnostic Checklist](#quick-diagnostic-checklist)
+- [Common Issues](#common-issues)
+- [Viewing Logs](#viewing-logs)
+- [Testing Individual Components](#testing-individual-components)
+- [Debug Mode](#debug-mode)
+- [Recovery Procedures](#recovery-procedures)
+- [Getting Help](#getting-help)
+- [Appendix A: Setting Up OCI Resource Scheduler](#appendix-a-setting-up-oci-resource-scheduler)
+
+---
+
 ## Quick Diagnostic Checklist
 
 1. [ ] Health endpoint returns 200: `curl https://<gateway>/health`

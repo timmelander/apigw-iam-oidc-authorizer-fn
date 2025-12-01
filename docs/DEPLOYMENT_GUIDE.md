@@ -15,6 +15,7 @@ This guide walks you through deploying the OCI API Gateway + OIDC Authentication
 - [Phase 8: Configure Functions](#phase-8-configure-functions)
 - [Phase 9: Backend Setup (Optional)](#phase-9-backend-setup-optional)
 - [Phase 10: Verification](#phase-10-verification)
+- [Phase 11: Function Warmup (Optional)](#phase-11-function-warmup-optional)
 - [Troubleshooting](#troubleshooting)
 - [Next Steps](#next-steps)
 
@@ -77,6 +78,10 @@ If you don't have full tenancy administrator access, work with your OCI administ
 ### Time Estimate
 
 Full deployment: 60-90 minutes (includes resource provisioning wait times)
+
+### Important: Cold Start Latency
+
+> **Note:** OCI Functions experience "cold starts" when idle for 5-15 minutes. The first request after idle may take 30-60+ seconds per function. Since the authentication flow involves multiple functions, initial requests can take 90-180+ seconds. See [Phase 11: Function Warmup](#phase-11-function-warmup-optional) for solutions to keep functions warm.
 
 ---
 
@@ -963,6 +968,81 @@ Open `$GATEWAY_URL/welcome` in browser:
 2. Enter credentials + MFA
 3. Should redirect back to `/welcome`
 4. Should see user information
+
+---
+
+## Phase 11: Function Warmup (Optional)
+
+OCI Functions experience "cold starts" when containers are stopped after idle periods (5-15 minutes). To ensure fast response times, configure periodic warmup using one of these OCI-native solutions.
+
+### Option 1: OCI Resource Scheduler (Recommended)
+
+Use OCI Resource Scheduler to invoke functions on a schedule. See [Appendix A in TROUBLESHOOTING.md](./TROUBLESHOOTING.md#appendix-a-setting-up-oci-resource-scheduler) for detailed setup instructions.
+
+**Summary:**
+```bash
+# Create a schedule that invokes health and oidc_authn every 5-10 minutes
+# This keeps the most critical functions warm
+```
+
+### Option 2: Cron Job on Compute Instance
+
+If you have a compute instance (e.g., the Apache backend), add a cron job:
+
+```bash
+# Edit crontab
+crontab -e
+
+# Add warmup calls every 5 minutes
+*/5 * * * * curl -s https://<gateway-url>/health > /dev/null 2>&1
+*/5 * * * * curl -s -o /dev/null -w '' https://<gateway-url>/auth/login > /dev/null 2>&1
+```
+
+### Option 3: OCI Health Checks
+
+Create OCI Health Checks to periodically ping the health endpoint:
+
+1. Navigate to **Observability & Management** → **Health Checks**
+2. Click **Create Health Check**
+3. Configure:
+   - **Name:** `apigw-oidc-warmup`
+   - **Protocol:** HTTPS
+   - **Target:** `<gateway-hostname>`
+   - **Path:** `/health`
+   - **Interval:** 5 minutes
+4. Click **Create**
+
+> **Note:** OCI Health Checks only support GET requests, so this warms the `health` function. For full warmup, combine with another option.
+
+### Option 4: Load Balancer Health Check
+
+If using an OCI Load Balancer in front of API Gateway, configure the backend health check:
+
+1. Navigate to **Networking** → **Load Balancers** → Your LB
+2. Edit the backend set health check:
+   - **URL Path:** `/health`
+   - **Interval:** 10000 ms (10 seconds)
+3. This naturally keeps the health function warm
+
+### Option 5: Post-Deployment Warmup Script
+
+Add a warmup step to your CI/CD pipeline after deploying functions:
+
+```bash
+#!/bin/bash
+# warmup.sh - Run after function deployment
+
+GATEWAY_URL="https://<gateway-url>"
+
+echo "Warming up functions..."
+curl -s "$GATEWAY_URL/health" > /dev/null
+curl -s -o /dev/null "$GATEWAY_URL/auth/login" 2>&1
+echo "Warmup complete"
+```
+
+### Recommended Approach
+
+For production deployments, use **Option 1 (OCI Resource Scheduler)** or **Option 2 (Cron Job)** to ensure all authentication functions stay warm. The health endpoint alone won't warm the `apigw_authzr` or `oidc_authn` functions.
 
 ---
 

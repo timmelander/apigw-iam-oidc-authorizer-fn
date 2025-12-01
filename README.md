@@ -216,13 +216,13 @@ See [Configuration](./docs/CONFIGURATION.md) for complete configuration details.
 4. Create Custom Claims for user profile data:
    - `user_email`, `user_given_name`, `user_family_name`, `user_groups`
 
-## Known Issues
+## Things to Know
 
-1. **Function naming restrictions** - Certain function names cause 502 errors. Workaround names are used:
+1. **Function naming** - Certain function names cause 502 errors in OCI. The following names are used as workarounds:
    - `session_authorizer` → `apigw_authzr`
    - `oidc_login` → `oidc_authn`
 
-2. **Cold start latency** - First invocation after idle may be slow due to container cold start.
+2. **Cold start latency** - First request after idle may take 30-60+ seconds due to OCI Functions container cold start. See [Troubleshooting: Cold Start Latency](./docs/TROUBLESHOOTING.md#slow-initial-response--cold-start-latency) for warmup solutions.
 
 ## License
 
