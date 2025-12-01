@@ -409,6 +409,21 @@ export OCIR_AUTH_TOKEN=$(oci iam auth-token create \
 echo "Auth token created. Save this value securely: $OCIR_AUTH_TOKEN"
 ```
 
+Example output from `oci iam auth-token create`:
+
+```json
+{
+  "data": {
+    "description": "OCIR access for Fn CLI",
+    "id": "ocid1.credential.oc1..<unique_id>",
+    "lifecycle-state": "ACTIVE",
+    "time-created": "2025-01-15T12:00:00.000000+00:00",
+    "token": "<your-auth-token>",
+    "user-id": "ocid1.user.oc1..<unique_id>"
+  }
+}
+```
+
 **Option 2: Create via OCI Console**
 
 1. Navigate to **Identity & Security** → **Users** → Your User
