@@ -600,6 +600,13 @@ echo "Backend IP: $BACKEND_IP"
 **Step 2: Generate api_deployment.json from template**
 
 ```bash
+# Check if template file exists
+if [ ! -f scripts/api_deployment.template.json ]; then
+  echo "ERROR: Template file not found. Ensure you cloned the repository."
+  echo "Expected location: scripts/api_deployment.template.json"
+  exit 1
+fi
+
 # Generate the deployment JSON with actual OCIDs
 sed -e "s|<apigw-authzr-fn-ocid>|$AUTHZR_FN_OCID|g" \
     -e "s|<health-fn-ocid>|$HEALTH_FN_OCID|g" \
