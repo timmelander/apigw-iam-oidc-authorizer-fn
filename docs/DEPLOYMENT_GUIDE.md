@@ -521,7 +521,37 @@ export GATEWAY_URL="https://$GATEWAY_HOSTNAME"
 
 ### 5.3 Create API Deployment
 
-Update `scripts/api_deployment.json` with your function OCIDs, then:
+The deployment specification template (`scripts/api_deployment.template.json`) contains placeholders that must be replaced with your actual OCIDs before creating the deployment.
+
+**Step 1: Verify required environment variables are set**
+
+```bash
+# These should already be set from previous phases
+echo "Authorizer Function: $AUTHZR_FN_OCID"
+echo "Health Function: $HEALTH_FN_OCID"
+echo "OIDC Authn Function: $OIDC_AUTHN_FN_OCID"
+echo "OIDC Callback Function: $OIDC_CALLBACK_FN_OCID"
+echo "OIDC Logout Function: $OIDC_LOGOUT_FN_OCID"
+echo "Backend IP: $BACKEND_IP"
+```
+
+**Step 2: Generate api_deployment.json from template**
+
+```bash
+# Generate the deployment JSON with actual OCIDs
+sed -e "s|<apigw-authzr-fn-ocid>|$AUTHZR_FN_OCID|g" \
+    -e "s|<health-fn-ocid>|$HEALTH_FN_OCID|g" \
+    -e "s|<oidc-authn-fn-ocid>|$OIDC_AUTHN_FN_OCID|g" \
+    -e "s|<oidc-callback-fn-ocid>|$OIDC_CALLBACK_FN_OCID|g" \
+    -e "s|<oidc-logout-fn-ocid>|$OIDC_LOGOUT_FN_OCID|g" \
+    -e "s|<backend-ip>|$BACKEND_IP|g" \
+    scripts/api_deployment.template.json > scripts/api_deployment.json
+
+# Verify the placeholders were replaced (should return nothing if successful)
+grep -E "<[a-z-]+-ocid>|<backend-ip>" scripts/api_deployment.json && echo "ERROR: Placeholders not replaced!" || echo "OK: All placeholders replaced"
+```
+
+**Step 3: Create the API Gateway deployment**
 
 ```bash
 oci api-gateway deployment create \
@@ -531,8 +561,17 @@ oci api-gateway deployment create \
   --path-prefix "/" \
   --specification file://scripts/api_deployment.json
 
-export DEPLOYMENT_OCID=<api-deployment-ocid>
+# Wait for deployment to be ACTIVE, then get the OCID
+export DEPLOYMENT_OCID=$(oci api-gateway deployment list \
+  --compartment-id $COMPARTMENT_OCID \
+  --gateway-id $GATEWAY_OCID \
+  --display-name "oidc-auth-deployment" \
+  --query 'data.items[0].id' --raw-output)
+
+echo "Deployment OCID: $DEPLOYMENT_OCID"
 ```
+
+> **Note:** The template file `api_deployment.template.json` should be committed to version control. The generated `api_deployment.json` (with actual OCIDs) should be in `.gitignore` to avoid committing sensitive OCIDs. If you need to update the deployment later, regenerate the JSON from the template and use `oci api-gateway deployment update --deployment-id $DEPLOYMENT_OCID --specification file://scripts/api_deployment.json --force`.
 
 ---
 

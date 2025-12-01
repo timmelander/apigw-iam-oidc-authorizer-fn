@@ -36,5 +36,8 @@ CLAUDE.md
 .env.local
 *.local.env
 
+# Generated deployment files (contain actual OCIDs)
+scripts/api_deployment.json
+
 # SAML/OAuth debug traces (may contain tokens)
 SAML-tracer-export*.json
