@@ -540,6 +540,51 @@ echo "OIDC Logout Function: $OIDC_LOGOUT_FN_OCID"
 echo "Backend IP: $BACKEND_IP"
 ```
 
+<details>
+<summary><strong>If variables are not set (new shell session)</strong></summary>
+
+Re-fetch all required variables using OCI CLI:
+
+```bash
+# First, ensure COMPARTMENT_OCID is set
+export COMPARTMENT_OCID="<your-compartment-ocid>"
+
+# Get Functions Application OCID
+export FN_APP_OCID=$(oci fn application list \
+  --compartment-id $COMPARTMENT_OCID \
+  --display-name "apigw-oidc-app" \
+  --query 'data[0].id' --raw-output)
+
+# Get all function OCIDs
+export HEALTH_FN_OCID=$(oci fn function list --application-id $FN_APP_OCID --all | jq -r '.data[] | select(.["display-name"] == "health") | .id')
+export OIDC_AUTHN_FN_OCID=$(oci fn function list --application-id $FN_APP_OCID --all | jq -r '.data[] | select(.["display-name"] == "oidc_authn") | .id')
+export OIDC_CALLBACK_FN_OCID=$(oci fn function list --application-id $FN_APP_OCID --all | jq -r '.data[] | select(.["display-name"] == "oidc_callback") | .id')
+export OIDC_LOGOUT_FN_OCID=$(oci fn function list --application-id $FN_APP_OCID --all | jq -r '.data[] | select(.["display-name"] == "oidc_logout") | .id')
+export AUTHZR_FN_OCID=$(oci fn function list --application-id $FN_APP_OCID --all | jq -r '.data[] | select(.["display-name"] == "apigw_authzr") | .id')
+
+# Get Backend IP (if backend is deployed)
+export BACKEND_INSTANCE_OCID=$(oci compute instance list \
+  --compartment-id $COMPARTMENT_OCID \
+  --display-name "apigw-oidc-backend" \
+  --lifecycle-state RUNNING \
+  --query 'data[0].id' --raw-output)
+
+export BACKEND_IP=$(oci compute instance list-vnics \
+  --instance-id $BACKEND_INSTANCE_OCID \
+  | jq -r '.data[0]["private-ip"]')
+
+# Verify all variables
+echo "Functions App: $FN_APP_OCID"
+echo "Authorizer: $AUTHZR_FN_OCID"
+echo "Health: $HEALTH_FN_OCID"
+echo "OIDC Authn: $OIDC_AUTHN_FN_OCID"
+echo "OIDC Callback: $OIDC_CALLBACK_FN_OCID"
+echo "OIDC Logout: $OIDC_LOGOUT_FN_OCID"
+echo "Backend IP: $BACKEND_IP"
+```
+
+</details>
+
 **Step 2: Generate api_deployment.json from template**
 
 ```bash
