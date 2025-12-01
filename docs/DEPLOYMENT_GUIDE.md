@@ -350,7 +350,8 @@ export CACHE_OCID=<cache-cluster-ocid>
 
 ```bash
 # Extract cache endpoint
-export CACHE_ENDPOINT=$(oci redis redis-cluster get --cluster-id $CACHE_OCID | jq -r '.data["primary-fqdn"]')
+export CACHE_ENDPOINT=$(oci redis redis-cluster redis-cluster \
+get --redis-cluster-id $CACHE_OCID | jq -r '.data["primary-fqdn"]')
 ```
 
 ---
