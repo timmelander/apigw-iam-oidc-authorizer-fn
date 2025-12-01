@@ -140,7 +140,7 @@ This solution provides session-based authentication for protecting web applicati
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/timmelander/apigw-iam-oidc-authorizer-fn.git
    cd apigw-iam-oidc-authorizer-fn
 
    ```
