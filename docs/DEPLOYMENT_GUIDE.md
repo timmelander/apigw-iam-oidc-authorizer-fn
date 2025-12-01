@@ -601,11 +601,7 @@ echo "Backend IP: $BACKEND_IP"
 
 ```bash
 # Check if template file exists
-if [ ! -f scripts/api_deployment.template.json ]; then
-  echo "ERROR: Template file not found. Ensure you cloned the repository."
-  echo "Expected location: scripts/api_deployment.template.json"
-  exit 1
-fi
+[ -f scripts/api_deployment.template.json ] || { echo "ERROR: Template file not found at scripts/api_deployment.template.json"; exit 1; }
 
 # Generate the deployment JSON with actual OCIDs
 sed -e "s|<apigw-authzr-fn-ocid>|$AUTHZR_FN_OCID|g" \
