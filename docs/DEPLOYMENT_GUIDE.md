@@ -400,14 +400,11 @@ An auth token is required to authenticate with Oracle Cloud Infrastructure Regis
 export USER_OCID=$(oci iam user list --compartment-id $TENANCY_OCID \
   --query "data[?name=='$OCIR_USER_EMAIL'].id | [0]" --raw-output)
 
-# Create the auth token
-AUTH_TOKEN_RESPONSE=$(oci iam auth-token create \
-  --user-id $USER_OCID \
-  --description "OCIR access for Fn CLI")
-
-# Extract and export the token value
+# Create the auth token and extract the token value using jq
 # IMPORTANT: Save this token immediately - it cannot be retrieved again after creation
-export OCIR_AUTH_TOKEN=$(echo $AUTH_TOKEN_RESPONSE | jq -r '.data.token')
+export OCIR_AUTH_TOKEN=$(oci iam auth-token create \
+  --user-id $USER_OCID \
+  --description "OCIR access for Fn CLI" | jq -r '.data.token')
 
 echo "Auth token created. Save this value securely: $OCIR_AUTH_TOKEN"
 ```
