@@ -383,10 +383,52 @@ export FN_APP_OCID=<functions-app-ocid>
 ```bash
 # Set your email for OCIR login
 export OCIR_USER_EMAIL="your.email@example.com"
+```
 
-# Create auth token in OCI Console (Identity → Users → Your User → Auth Tokens)
+**Create an Auth Token for OCIR Access**
+
+An auth token is required to authenticate with Oracle Cloud Infrastructure Registry (OCIR). You can create one via the OCI Console or CLI.
+
+**Reference Documentation:**
+- [CLI: oci iam auth-token](https://docs.oracle.com/en-us/iaas/tools/oci-cli/3.71.0/oci_cli_docs/cmdref/iam/auth-token.htm)
+- [Console: Getting an Auth Token](https://docs.oracle.com/en-us/iaas/Content/Registry/Tasks/registrygettingauthtoken.htm)
+
+**Option 1: Create via CLI (Recommended)**
+
+```bash
+# Get your user OCID
+export USER_OCID=$(oci iam user list --compartment-id $TENANCY_OCID \
+  --query "data[?name=='$OCIR_USER_EMAIL'].id | [0]" --raw-output)
+
+# Create the auth token
+AUTH_TOKEN_RESPONSE=$(oci iam auth-token create \
+  --user-id $USER_OCID \
+  --description "OCIR access for Fn CLI")
+
+# Extract and export the token value
+# IMPORTANT: Save this token immediately - it cannot be retrieved again after creation
+export OCIR_AUTH_TOKEN=$(echo $AUTH_TOKEN_RESPONSE | jq -r '.data.token')
+
+echo "Auth token created. Save this value securely: $OCIR_AUTH_TOKEN"
+```
+
+**Option 2: Create via OCI Console**
+
+1. Navigate to **Identity & Security** → **Users** → Your User
+2. Under **Resources**, click **Auth Tokens**
+3. Click **Generate Token**
+4. Enter a description (e.g., "OCIR access for Fn CLI")
+5. Click **Generate Token**
+6. **Copy the token immediately** - it will not be shown again
+
+```bash
+# Set the auth token from console
 export OCIR_AUTH_TOKEN="your-auth-token"
+```
 
+**Configure Fn CLI**
+
+```bash
 # List existing contexts
 fn list context
 
@@ -403,6 +445,8 @@ fn update context registry $REGION.ocir.io/$REGISTRY_NAMESPACE/oidc-fn-repo
 # Login to container registry
 docker login $REGION.ocir.io -u "$REGISTRY_NAMESPACE/oracleidentitycloudservice/$OCIR_USER_EMAIL" -p "$OCIR_AUTH_TOKEN"
 ```
+
+> **Note:** Auth tokens are valid for 90 days by default and each user can have a maximum of 2 auth tokens. If you need to rotate or manage tokens, use `oci iam auth-token list` and `oci iam auth-token delete`. For federated users (IDCS/Identity Domain), the username format for OCIR login is `<namespace>/oracleidentitycloudservice/<email>`. For local OCI users, use `<namespace>/<username>`. See the [Auth Token CLI Reference](https://docs.oracle.com/en-us/iaas/tools/oci-cli/3.71.0/oci_cli_docs/cmdref/iam/auth-token.htm) and [OCIR Authentication Guide](https://docs.oracle.com/en-us/iaas/Content/Registry/Tasks/registrygettingauthtoken.htm) for more details.
 
 ### 4.4 Deploy Functions
 
