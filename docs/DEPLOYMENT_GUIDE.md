@@ -525,13 +525,18 @@ The deployment specification template (`scripts/api_deployment.template.json`) c
 
 **Step 1: Verify required environment variables are set**
 
+The function OCIDs should already be set from [Section 4.5](#45-get-function-ocids). The backend IP requires completing [Phase 9: Backend Setup](#phase-9-backend-setup-optional) first, or you can use a placeholder and update the deployment later.
+
 ```bash
-# These should already be set from previous phases
+# Function OCIDs from Section 4.5
 echo "Authorizer Function: $AUTHZR_FN_OCID"
 echo "Health Function: $HEALTH_FN_OCID"
 echo "OIDC Authn Function: $OIDC_AUTHN_FN_OCID"
 echo "OIDC Callback Function: $OIDC_CALLBACK_FN_OCID"
 echo "OIDC Logout Function: $OIDC_LOGOUT_FN_OCID"
+
+# Backend IP from Section 9.3 (or set placeholder if backend not yet deployed)
+# If backend not ready, set a placeholder: export BACKEND_IP="10.0.1.x"
 echo "Backend IP: $BACKEND_IP"
 ```
 
