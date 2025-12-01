@@ -600,19 +600,15 @@ echo "Backend IP: $BACKEND_IP"
 **Step 2: Generate api_deployment.json from template**
 
 ```bash
-# Check if template file exists
-[ -f scripts/api_deployment.template.json ] || { echo "ERROR: Template file not found at scripts/api_deployment.template.json"; exit 1; }
-
-# Generate the deployment JSON with actual OCIDs
+# Generate api_deployment.json from template (check template exists, replace placeholders, verify)
+[ -f scripts/api_deployment.template.json ] || { echo "ERROR: Template file not found at scripts/api_deployment.template.json"; exit 1; } && \
 sed -e "s|<apigw-authzr-fn-ocid>|$AUTHZR_FN_OCID|g" \
     -e "s|<health-fn-ocid>|$HEALTH_FN_OCID|g" \
     -e "s|<oidc-authn-fn-ocid>|$OIDC_AUTHN_FN_OCID|g" \
     -e "s|<oidc-callback-fn-ocid>|$OIDC_CALLBACK_FN_OCID|g" \
     -e "s|<oidc-logout-fn-ocid>|$OIDC_LOGOUT_FN_OCID|g" \
     -e "s|<backend-ip>|$BACKEND_IP|g" \
-    scripts/api_deployment.template.json > scripts/api_deployment.json
-
-# Verify the placeholders were replaced (should return nothing if successful)
+    scripts/api_deployment.template.json > scripts/api_deployment.json && \
 grep -E "<[a-z-]+-ocid>|<backend-ip>" scripts/api_deployment.json && echo "ERROR: Placeholders not replaced!" || echo "OK: All placeholders replaced"
 ```
 
