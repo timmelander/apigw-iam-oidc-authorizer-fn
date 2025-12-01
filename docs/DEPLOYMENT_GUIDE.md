@@ -408,7 +408,7 @@ docker login $REGION.ocir.io -u "$REGISTRY_NAMESPACE/oracleidentitycloudservice/
 
 ```bash
 # Clone repository
-git clone https://github.com/timmelander/apigw-iam-oidc-authorizer.git
+git clone https://github.com/timmelander/apigw-iam-oidc-authorizer-fn.git
 cd apigw-iam-oidc-authorizer
 
 # Deploy each function
