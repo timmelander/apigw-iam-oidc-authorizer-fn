@@ -521,6 +521,10 @@ export GATEWAY_URL="https://$GATEWAY_HOSTNAME"
 
 ### 5.3 Create API Deployment
 
+> **Dependency Note:** This section requires `BACKEND_IP` which is created in [Phase 9: Backend Setup](#phase-9-backend-setup-optional). You have two options:
+> 1. **Complete Phase 9 first** (recommended) - Jump to Phase 9, create the backend, then return here
+> 2. **Use a placeholder** - Set `export BACKEND_IP="10.0.1.100"` now and update the deployment after Phase 9
+
 The deployment specification template (`scripts/api_deployment.template.json`) contains placeholders that must be replaced with your actual OCIDs before creating the deployment.
 
 **Step 1: Verify required environment variables are set**
@@ -562,7 +566,22 @@ export OIDC_CALLBACK_FN_OCID=$(oci fn function list --application-id $FN_APP_OCI
 export OIDC_LOGOUT_FN_OCID=$(oci fn function list --application-id $FN_APP_OCID --all | jq -r '.data[] | select(.["display-name"] == "oidc_logout") | .id')
 export AUTHZR_FN_OCID=$(oci fn function list --application-id $FN_APP_OCID --all | jq -r '.data[] | select(.["display-name"] == "apigw_authzr") | .id')
 
-# Get Backend IP (if backend is deployed)
+# Verify function variables
+echo "Functions App: $FN_APP_OCID"
+echo "Authorizer: $AUTHZR_FN_OCID"
+echo "Health: $HEALTH_FN_OCID"
+echo "OIDC Authn: $OIDC_AUTHN_FN_OCID"
+echo "OIDC Callback: $OIDC_CALLBACK_FN_OCID"
+echo "OIDC Logout: $OIDC_LOGOUT_FN_OCID"
+```
+
+**Backend IP:** The backend is created in [Phase 9](#phase-9-backend-setup-optional). If the backend is not yet deployed, use a placeholder IP and update the deployment later:
+
+```bash
+# Option 1: Use placeholder (update deployment later after Phase 9)
+export BACKEND_IP="10.0.1.100"
+
+# Option 2: If backend already exists (Phase 9 completed)
 export BACKEND_INSTANCE_OCID=$(oci compute instance list \
   --compartment-id $COMPARTMENT_OCID \
   --display-name "apigw-oidc-backend" \
@@ -573,13 +592,6 @@ export BACKEND_IP=$(oci compute instance list-vnics \
   --instance-id $BACKEND_INSTANCE_OCID \
   | jq -r '.data[0]["private-ip"]')
 
-# Verify all variables
-echo "Functions App: $FN_APP_OCID"
-echo "Authorizer: $AUTHZR_FN_OCID"
-echo "Health: $HEALTH_FN_OCID"
-echo "OIDC Authn: $OIDC_AUTHN_FN_OCID"
-echo "OIDC Callback: $OIDC_CALLBACK_FN_OCID"
-echo "OIDC Logout: $OIDC_LOGOUT_FN_OCID"
 echo "Backend IP: $BACKEND_IP"
 ```
 
