@@ -22,59 +22,59 @@ This solution provides session-based authentication for protecting web applicati
 ## Architecture
 
 ```
-     ┌──────────┐      ┌───────────────────────────────────────────────────────────┐
-     │ Browser  │      │                OCI API Gateway (Public)                   │
-     │          │      │  ┌─────────────────────────────────────────────────────┐  │
-     │          │─────►│  │          Custom Authorizer (apigw_authzr)           │  │
-     │          │      │  │   • Validates session cookie (via OCI Cache)        │  │
-     │          │      │  │   • Decrypts session (pepper from OCI Vault)        │  │
-     │          │      │  │   • Returns user claims or triggers login redirect  │  │
-     │          │      │  └─────────────────────────────────────────────────────┘  │
-     │          │      │                           │                               │
-     │          │      │        ┌──────────────────┼───────────────────┐           │
-     │          │      │        ▼                  ▼                   ▼           │
-     │          │      │    ┌─────────┐        ┌──────────┐        ┌──────────┐    │
-     │          │      │    │/auth/*  │        │/welcome  │        │/health   │    │
-     │          │      │    │Anonymous│        │Protected │        │Anonymous │    │
-     │          │      │    └────┬────┘        └─────┬────┘        └─────┬────┘    │
-     └──────────┘      └─────────┼───────────────────┼───────────────────┼─────────┘
-          ▲                      │                   │                   │
-          │                      │                   │                   │
-          │                      │                   │                   │         
-          │                      ▼                   ▼                   ▼                  
-          │  ┌───────────────────────────────┐   ┌─────────────┐     ┌─────────────┐
-          │  │       OIDC Functions          │   │   Backend   │     │   health    │
-          │  │                               │   │   (HTTP)    │     │  function   │
-          │  │ ┌──────────┐  ┌─────────────┐ │   │             │     │             │
-          │  │ │oidc_authn│  │oidc_callback│ │   │ • Apache    │     │ • Returns   │
-          │  │ │          │  │             │ │   │ • Static    │     │   status    │
-          │  │ │• PKCE    │  │• Token      │ │   │   content   │     │             │
-          │  │ │• State   │  │  exchange   │ │   │ • CGI       │     │ (standalone │
-          │  │ │• Redirect│  │• Session    │ │   │             │     │  no deps)   │
-          │  │ └──────────┘  └─────────────┘ │   └─────────────┘     └─────────────┘
-          │  │ ┌───────────────────────────┐ │
-          │  │ │       oidc_logout         │ │
-          │  │ │  • Session cleanup        │ │
-          │  │ │  • IdP logout             │ │
-          │  │ └───────────────────────────┘ │
-          │  └───────────────┬───────────────┘
-    OIDC Redirect            │
-          │   ┌──────────────┼──────────┐
-          │   ▼              ▼          ▼
-     ┌─────────────┐   ┌─────────┐  ┌─────────┐
-     │   OCI IAM   │   │   OCI   │  │   OCI   │
-     │  Identity   │   │  Cache  │  │  Vault  │
-     │   Domain    │   │ (Redis) │  │         │
-     │             │   │         │  │• Client │
-     │  • Auth URL │   │• Session│  │  secret │
-     │  • Tokens   │   │  store  │  │• Pepper │
-     └─────────────┘   └─────────┘  └─────────┘
-                            ▲            ▲
-                            └──────┬─────┘
-                                   │
-                          apigw_authzr also uses
-                          Cache + Vault for session
-                          validation on every request
+┌──────────┐      ┌───────────────────────────────────────────────────────────┐
+│ Browser  │      │                OCI API Gateway (Public)                   │
+│          │      │  ┌─────────────────────────────────────────────────────┐  │
+│          │─────►│  │          Custom Authorizer (apigw_authzr)           │  │
+│          │      │  │   • Validates session cookie (via OCI Cache)        │  │
+│          │      │  │   • Decrypts session (pepper from OCI Vault)        │  │
+│          │      │  │   • Returns user claims or triggers login redirect  │  │
+│          │      │  └─────────────────────────────────────────────────────┘  │
+│          │      │                           │                               │
+│          │      │        ┌──────────────────┼───────────────────┐           │
+│          │      │        ▼                  ▼                   ▼           │
+│          │      │    ┌─────────┐        ┌──────────┐        ┌──────────┐    │
+│          │      │    │/auth/*  │        │/welcome  │        │/health   │    │
+│          │      │    │Anonymous│        │Protected │        │Anonymous │    │
+│          │      │    └────┬────┘        └─────┬────┘        └─────┬────┘    │
+└──────────┘      └─────────┼───────────────────┼───────────────────┼─────────┘
+     ▲                      │                   │                   │
+     │                      │                   │                   │
+     │                      │                   │                   │
+     │                      ▼                   ▼                   ▼
+     │  ┌───────────────────────────────┐   ┌─────────────┐     ┌─────────────┐
+     │  │       OIDC Functions          │   │   Backend   │     │   health    │
+     │  │                               │   │   (HTTP)    │     │  function   │
+     │  │ ┌──────────┐  ┌─────────────┐ │   │             │     │             │
+     │  │ │oidc_authn│  │oidc_callback│ │   │ • Apache    │     │ • Returns   │
+     │  │ │          │  │             │ │   │ • Static    │     │   status    │
+     │  │ │• PKCE    │  │• Token      │ │   │   content   │     │             │
+     │  │ │• State   │  │  exchange   │ │   │ • CGI       │     │ (standalone │
+     │  │ │• Redirect│  │• Session    │ │   │             │     │  no deps)   │
+     │  │ └──────────┘  └─────────────┘ │   └─────────────┘     └─────────────┘
+     │  │ ┌───────────────────────────┐ │
+     │  │ │       oidc_logout         │ │
+     │  │ │  • Session cleanup        │ │
+     │  │ │  • IdP logout             │ │
+     │  │ └───────────────────────────┘ │
+     │  └───────────────┬───────────────┘
+OIDC │                  │
+Redirect ┌──────────────┼──────────┐
+     │   ▼              ▼          ▼
+┌─────────────┐   ┌─────────┐  ┌─────────┐
+│   OCI IAM   │   │   OCI   │  │   OCI   │
+│  Identity   │   │  Cache  │  │  Vault  │
+│   Domain    │   │ (Redis) │  │         │
+│             │   │         │  │• Client │
+│  • Auth URL │   │• Session│  │  secret │
+│  • Tokens   │   │  store  │  │• Pepper │
+└─────────────┘   └─────────┘  └─────────┘
+                       ▲            ▲
+                       └──────┬─────┘
+                              │
+                     apigw_authzr also uses
+                     Cache + Vault for session
+                     validation on every request
 
 
 BUILD & DEPLOY (Development Time)
