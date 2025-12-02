@@ -43,6 +43,7 @@ This guide walks you through deploying the OCI API Gateway + OIDC Authentication
   - Verify installation: `podman --version`
   - **For Fn CLI compatibility**: Install `podman-docker` to create a `docker` symlink: `sudo dnf install podman-docker`
   - **See also**: [FAQ: Why Podman is required and how does OCIR work?](./FAQ.md#why-podman-is-required-and-how-does-ocir-work)
+  - **Docker alternative**: If you prefer Docker, you can substitute `docker` for `podman` in all commands throughout this guide. Install Docker from [docs.docker.com/get-docker](https://docs.docker.com/get-docker/)
 - **Git** - For cloning the repository and accessing the function code
   - **Why needed**: The function source code, Dockerfiles, and deployment scripts are hosted on GitHub. Git is required to download (clone) the repository.
   - Installation:

@@ -193,6 +193,8 @@ Each function folder contains:
 
 This project uses **Podman** - a daemonless, rootless container runtime that is the default on Oracle Linux 8+. Podman is used by the Fn CLI to build function container images locally, which are then stored in Oracle Container Image Registry (OCIR).
 
+> **Docker alternative**: If you prefer Docker, you can substitute `docker` for `podman` in all commands. Both tools are fully compatible with the Dockerfiles in this project. Install Docker from [docs.docker.com/get-docker](https://docs.docker.com/get-docker/)
+
 #### Why Podman over Docker?
 
 | Aspect | Podman | Docker |

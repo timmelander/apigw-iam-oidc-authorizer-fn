@@ -138,6 +138,7 @@ BUILD & DEPLOY (Development Time)
 - OCI CLI configured with appropriate permissions
 - Fn CLI installed and configured
 - Podman installed for function builds (default on Oracle Linux 8+)
+  - **Docker alternative**: If you prefer Docker, you can substitute `docker` for `podman` in all commands
 - OCI Identity Domain with Confidential Application
 - OCI Cache (Redis) cluster
 - OCI Vault with secrets
