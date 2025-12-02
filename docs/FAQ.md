@@ -160,6 +160,18 @@ The `apigw_authzr` function is configured as a **Custom Authorizer** directly in
 └─────────────────────────────────────────────────────────────┘
 ```
 
+#### Could any functions run on Container Instances?
+
+| Function | Container Instances? | Reason |
+|----------|---------------------|--------|
+| **apigw_authzr** | **No** | Authorizer must be OCI Function |
+| oidc_authn | Yes | HTTP backend route |
+| oidc_callback | Yes | HTTP backend route |
+| oidc_logout | Yes | HTTP backend route |
+| health | Yes | HTTP backend route |
+
+The backend functions (login, callback, logout, health) *could* theoretically run on Container Instances since they're just HTTP endpoints. However, since you need at least one OCI Function for the authorizer anyway, there's no practical benefit to splitting them across different compute types - it would only add complexity.
+
 #### 2. Serverless Cost Model
 
 For a POC or low-traffic application, Functions scale to zero - you only pay per invocation. Container Instances run continuously and bill for uptime even when idle.
