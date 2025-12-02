@@ -131,7 +131,7 @@ This solution provides session-based authentication for protecting web applicati
 
 - OCI CLI configured with appropriate permissions
 - Fn CLI installed and configured
-- Docker installed for function builds
+- Podman installed for function builds (default on Oracle Linux 8+)
 - OCI Identity Domain with Confidential Application
 - OCI Cache (Redis) cluster
 - OCI Vault with secrets

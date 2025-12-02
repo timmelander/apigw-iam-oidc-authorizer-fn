@@ -32,14 +32,17 @@ This guide walks you through deploying the OCI API Gateway + OIDC Authentication
   - Default config location: `~/.oci/config`
 - **Fn CLI** - For deploying OCI Functions
   - Installation guide: [Installing the Fn Project CLI](https://docs.oracle.com/en-us/iaas/Content/Functions/Tasks/functionsinstallfncli.htm)
-- **Docker** - Standard Docker Engine or Docker Desktop (NOT Oracle-specific)
-  - **Why needed**: OCI Functions run as container images. Docker builds these images from Dockerfiles before deployment. Without Docker, you cannot package and deploy the functions.
-  - **How it's used**: Fn CLI uses Docker to build function container images locally, then pushes them to Oracle Container Image Registry (OCIR)
-  - **How to install**: [Installing and Configuring Docker](https://docs.oracle.com/en-us/iaas/Content/Functions/Tasks/functionsinstalldocker.htm)
-  - Download: [Get Docker](https://docs.docker.com/get-docker/)
-  - Verify installation: `docker --version`
-  - **Note**: This is standard Docker from Docker Inc., not an Oracle product
-  - **See also**: [FAQ: Why Docker is required and how does OCIR work?](./FAQ.md#why-docker-is-required-and-how-does-ocir-work)
+- **Podman** - Container runtime for building and pushing function images
+  - **Why needed**: OCI Functions run as container images. Podman builds these images from Dockerfiles before deployment. Without Podman, you cannot package and deploy the functions.
+  - **How it's used**: Fn CLI uses Podman to build function container images locally, then pushes them to Oracle Container Image Registry (OCIR)
+  - **Why Podman**: Podman is the default container runtime on Oracle Linux 8+, is daemonless, and runs rootless by default
+  - Installation:
+    - **Oracle Linux / RHEL**: `sudo dnf install podman` (usually pre-installed)
+    - **macOS**: `brew install podman && podman machine init && podman machine start`
+    - **Ubuntu/Debian**: `sudo apt-get install podman`
+  - Verify installation: `podman --version`
+  - **For Fn CLI compatibility**: Install `podman-docker` to create a `docker` symlink: `sudo dnf install podman-docker`
+  - **See also**: [FAQ: Why Podman is required and how does OCIR work?](./FAQ.md#why-podman-is-required-and-how-does-ocir-work)
 - **Git** - For cloning the repository and accessing the function code
   - **Why needed**: The function source code, Dockerfiles, and deployment scripts are hosted on GitHub. Git is required to download (clone) the repository.
   - Installation:
@@ -460,7 +463,7 @@ fn update context api-url https://functions.$REGION.oraclecloud.com
 fn update context registry $REGION.ocir.io/$REGISTRY_NAMESPACE/oidc-fn-repo
 
 # Login to container registry
-docker login $REGION.ocir.io -u "$REGISTRY_NAMESPACE/oracleidentitycloudservice/$OCIR_USER_EMAIL" -p "$OCIR_AUTH_TOKEN"
+podman login $REGION.ocir.io -u "$REGISTRY_NAMESPACE/oracleidentitycloudservice/$OCIR_USER_EMAIL" -p "$OCIR_AUTH_TOKEN"
 ```
 
 > **Note:** Auth tokens are valid for 90 days by default and each user can have a maximum of 2 auth tokens. If you need to rotate or manage tokens, use `oci iam auth-token list` and `oci iam auth-token delete`. For federated users (IDCS/Identity Domain), the username format for OCIR login is `<namespace>/oracleidentitycloudservice/<email>`. For local OCI users, use `<namespace>/<username>`. See the [Auth Token CLI Reference](https://docs.oracle.com/en-us/iaas/tools/oci-cli/3.71.0/oci_cli_docs/cmdref/iam/auth-token.htm) and [OCIR Authentication Guide](https://docs.oracle.com/en-us/iaas/Content/Registry/Tasks/registrygettingauthtoken.htm) for more details.

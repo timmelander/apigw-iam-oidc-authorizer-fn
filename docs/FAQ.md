@@ -7,7 +7,7 @@ This document answers common questions about the OCI API Gateway + OIDC Authenti
 - [What is HKDF Pepper and how does Mass Logout work?](#what-is-hkdf-pepper-and-how-does-mass-logout-work)
 - [What is an Authorizer Function?](#what-is-an-authorizer-function-and-how-is-apigw_authzr-different-from-other-functions)
 - [What is the Dockerfile in each function folder?](#what-is-the-dockerfile-in-each-function-folder)
-- [Why Docker is required and how does OCIR work?](#why-docker-is-required-and-how-does-ocir-work)
+- [Why Podman is required and how does OCIR work?](#why-podman-is-required-and-how-does-ocir-work)
 - [What is OCI Cache and why is it used for session storage?](#what-is-oci-cache-and-why-is-it-used-for-session-storage)
 - [What are Custom Claims and why does this solution need them?](#what-are-custom-claims-and-why-does-this-solution-need-them)
 - [What are OIDC Scopes and why do they matter?](#what-are-oidc-scopes-and-why-do-they-matter)
@@ -137,7 +137,7 @@ Browser ──▶ Request ──────────────▶ │  ┌
 
 ### What is the Dockerfile in each function folder?
 
-A **Dockerfile** is a build recipe that tells Docker how to create a container image for each OCI Function. Every function in this project has one for consistent, reproducible builds.
+A **Dockerfile** is a build recipe that tells Podman (or Docker) how to create a container image for each OCI Function. Every function in this project has one for consistent, reproducible builds.
 
 #### How it works:
 
@@ -189,9 +189,19 @@ Each function folder contains:
 
 ---
 
-### Why Docker is required and how does OCIR work?
+### Why Podman is required and how does OCIR work?
 
-This project uses **standard Docker** (Docker Engine or Docker Desktop) from Docker Inc. - **NOT an Oracle-specific version**. Docker is used by the Fn CLI to build function container images locally, which are then stored in Oracle Container Image Registry (OCIR).
+This project uses **Podman** - a daemonless, rootless container runtime that is the default on Oracle Linux 8+. Podman is used by the Fn CLI to build function container images locally, which are then stored in Oracle Container Image Registry (OCIR).
+
+#### Why Podman over Docker?
+
+| Aspect | Podman | Docker |
+|--------|--------|--------|
+| **Default on Oracle Linux 8+** | Yes | No |
+| **Daemonless** | Yes (no background service) | No (requires dockerd) |
+| **Rootless by default** | Yes (more secure) | No |
+| **OCI-compliant images** | Yes | Yes |
+| **Dockerfile compatible** | Yes | Yes |
 
 #### The Build and Deploy Flow
 
@@ -200,13 +210,13 @@ This project uses **standard Docker** (Docker Engine or Docker Desktop) from Doc
 │                         Your Local Machine                        │
 │                                                                   │
 │  ┌──────────────┐     ┌──────────────┐     ┌──────────────────┐   │
-│  │  Dockerfile  │────▶│    Docker    │────▶│  Function Image  │   │
+│  │  Dockerfile  │────▶│    Podman    │────▶│  Function Image  │   │
 │  │   (recipe)   │     │  (builds it) │     │   (container)    │   │
 │  └──────────────┘     └──────────────┘     └─────────┬────────┘   │
 │                                                      │            │
 └──────────────────────────────────────────────────────┼────────────┘
                                                        │
-                                                       │ docker push
+                                                       │ podman push
                                                        ▼
 ┌───────────────────────────────────────────────────────────────────┐
 │                Oracle Container Image Registry (OCIR)             │
@@ -219,7 +229,7 @@ This project uses **standard Docker** (Docker Engine or Docker Desktop) from Doc
 │                                                                   │
 └─────────────────────────────────────────────────────┬─────────────┘
                                                       │
-                                                      │ docker pull
+                                                      │ (OCI pulls)
                                                       ▼
 ┌─────────────────────────────────────────────────────────────────────┐
 │                         OCI Functions                               │
@@ -233,30 +243,39 @@ This project uses **standard Docker** (Docker Engine or Docker Desktop) from Doc
 
 | Component | Description | Documentation |
 |-----------|-------------|---------------|
-| **Docker** | Standard Docker Engine or Docker Desktop from Docker Inc. | [Get Docker](https://docs.docker.com/get-docker/) |
-| **Fn CLI** | Oracle's CLI tool for deploying functions (uses Docker) | [Fn Project](https://fnproject.io/) |
+| **Podman** | Daemonless container runtime, default on Oracle Linux 8+ | [Podman](https://podman.io/) |
+| **Fn CLI** | Oracle's CLI tool for deploying functions (uses Podman via docker alias) | [Fn Project](https://fnproject.io/) |
 | **OCIR** | Oracle Container Image Registry - stores function images | [OCIR Documentation](https://docs.oracle.com/en-us/iaas/Content/Registry/home.htm) |
-| **OCI Functions** | Serverless platform that pulls images from OCIR | [Functions with Docker](https://docs.oracle.com/en-us/iaas/Content/Functions/Tasks/functionsquickstartlocalhost.htm) |
+| **OCI Functions** | Serverless platform that pulls images from OCIR | [Functions Documentation](https://docs.oracle.com/en-us/iaas/Content/Functions/home.htm) |
 
 #### What happens when you run `fn deploy`?
 
 1. **Fn CLI reads** `Dockerfile` and `func.yaml`
-2. **Docker builds** the function image locally
-3. **Docker tags** the image: `<region>.ocir.io/<namespace>/<repo>/<function>:<version>`
-4. **Docker pushes** the image to OCIR (requires authentication)
+2. **Podman builds** the function image locally
+3. **Podman tags** the image: `<region>.ocir.io/<namespace>/<repo>/<function>:<version>`
+4. **Podman pushes** the image to OCIR (requires authentication)
 5. **Fn CLI updates** the OCI Function to reference the new image in OCIR
 6. **OCI Functions** pulls the image from OCIR when the function is invoked
+
+#### Fn CLI Compatibility
+
+Fn CLI expects a `docker` command. Install `podman-docker` to create a compatibility alias:
+
+```bash
+# Oracle Linux / RHEL
+sudo dnf install podman-docker
+```
 
 #### Authentication to OCIR
 
 ```bash
 # Login format
-docker login <region>.ocir.io \
+podman login <region>.ocir.io \
   -u '<namespace>/oracleidentitycloudservice/<email>' \
   -p '<auth-token>'
 
 # Example
-docker login us-chicago-1.ocir.io \
+podman login us-chicago-1.ocir.io \
   -u 'mytenancy/oracleidentitycloudservice/user@example.com' \
   -p 'my-auth-token'
 ```
@@ -272,8 +291,8 @@ docker login us-chicago-1.ocir.io \
 
 | ❌ Incorrect Assumption | ✅ Reality |
 |------------------------|-----------|
-| "Docker is an Oracle product" | Docker is from Docker Inc., not Oracle |
-| "I need a special Oracle Docker" | You need standard Docker Engine/Desktop |
+| "I need Docker for OCI Functions" | Podman works and is preferred on Oracle Linux |
+| "Podman can't read Dockerfiles" | Podman fully supports Dockerfiles |
 | "Functions pull from Docker Hub" | Functions pull from OCIR only |
 | "OCIR is optional" | OCIR is required for OCI Functions |
 

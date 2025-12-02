@@ -74,7 +74,7 @@ Create a Confidential Application in your OCI IAM Identity Domain:
 cd functions/
 
 # Login to OCIR
-docker login <region>.ocir.io -u '<namespace>/oracleidentitycloudservice/<email>'
+podman login <region>.ocir.io -u '<namespace>/oracleidentitycloudservice/<email>'
 
 # Deploy all functions
 fn deploy --app apigw-oidc-app --all

@@ -105,7 +105,7 @@ openssl x509 -req -days 365 -in apache_mtls_client.csr -CA ca.crt -CAkey ca.key 
 
 ```bash
 cd functions/
-docker login <region>.ocir.io -u '<namespace>/oracleidentitycloudservice/<email>'
+podman login <region>.ocir.io -u '<namespace>/oracleidentitycloudservice/<email>'
 fn deploy --app apigw-oidc-app --all
 ```
 

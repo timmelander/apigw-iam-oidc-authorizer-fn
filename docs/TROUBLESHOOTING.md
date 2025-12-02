@@ -188,7 +188,7 @@ Total potential cold start time: 90-180+ seconds
    - Keeps containers warm but incurs additional cost
 
 5. **Optimize Dependencies**
-   - Use multi-stage Docker builds
+   - Use multi-stage container builds (Dockerfile)
    - Lazy-load heavy modules
    - Consider lighter alternatives to `cryptography`
 

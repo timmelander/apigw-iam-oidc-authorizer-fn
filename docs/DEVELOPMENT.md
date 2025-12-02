@@ -145,8 +145,8 @@ python3 --version
 # Fn CLI
 fn version
 
-# Docker
-docker --version
+# Podman
+podman --version
 ```
 
 ### Virtual Environment
@@ -198,7 +198,7 @@ def test_authorizer_valid_session():
 ### Local Function Invocation
 
 ```bash
-# Build and run locally (requires Docker)
+# Build and run locally (requires Podman)
 cd functions/health
 fn build
 fn run
