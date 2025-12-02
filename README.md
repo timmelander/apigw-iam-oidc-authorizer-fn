@@ -11,7 +11,8 @@ This solution provides session-based authentication for protecting web applicati
 - **OIDC Authorization Code Flow with PKCE** for secure authentication
 - **OCI Cache (Redis)** for secure session storage
 - **OCI Vault** for secrets management
-- **Custom Authorizer Function** for session validation
+- **OCI Functions** with custom authorizer for session validation
+- **Podman** for building and deploying function container images
 - **Automatic login redirect** for unauthenticated requests
 
 ## Demo
