@@ -75,9 +75,14 @@ This solution provides session-based authentication for protecting web applicati
                           apigw_authzr also uses
                           Cache + Vault for session
                           validation on every request
-             
-             
-           
+
+
+BUILD & DEPLOY (Development Time)
+─────────────────────────────────
+┌────────────┐    ┌─────────┐    ┌─────────┐    ┌──────────────┐
+│ Dockerfile │───▶│ Podman  │───▶│  OCIR   │───▶│ OCI Functions│
+│ + Code     │    │ (build) │    │ (store) │    │   (deploy)   │
+└────────────┘    └─────────┘    └─────────┘    └──────────────┘
 ```
 
 > **Note:** This diagram represents the functional POC architecture. For production deployments, see the [Production Hardening section in SECURITY.md](./docs/SECURITY.md#production-hardening) which includes Load Balancer, WAF, private subnets, and mTLS recommendations.
