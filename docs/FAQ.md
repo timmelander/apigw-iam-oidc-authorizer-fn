@@ -6,6 +6,7 @@ This document answers common questions about the OCI API Gateway + OIDC Authenti
 
 - [What is HKDF Pepper and how does Mass Logout work?](#what-is-hkdf-pepper-and-how-does-mass-logout-work)
 - [What is an Authorizer Function?](#what-is-an-authorizer-function-and-how-is-apigw_authzr-different-from-other-functions)
+- [Why OCI Functions instead of Container Instances?](#why-oci-functions-instead-of-container-instances)
 - [What is the Dockerfile in each function folder?](#what-is-the-dockerfile-in-each-function-folder)
 - [Why Podman is required and how does OCIR work?](#why-podman-is-required-and-how-does-ocir-work)
 - [What is OCI Cache and why is it used for session storage?](#what-is-oci-cache-and-why-is-it-used-for-session-storage)
@@ -132,6 +133,69 @@ Browser ──▶ Request ──────────────▶ │  ┌
 - **Centralized auth**: One function protects ALL routes - backends don't need auth logic
 - **Consistent security**: Every protected request goes through the same validation
 - **Clean separation**: Backend functions only handle business logic, not authentication
+
+---
+
+### Why OCI Functions instead of Container Instances?
+
+This solution uses **OCI Functions** (serverless) rather than **OCI Container Instances** (always-on containers) for several reasons:
+
+#### 1. Native API Gateway Authorizer Integration
+
+The `apigw_authzr` function is configured as a **Custom Authorizer** directly in API Gateway. This is a native feature that only works with OCI Functions - Container Instances don't have this integration.
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      API Gateway                            │
+│                                                             │
+│   ┌─────────────────────────────────────────────────────┐   │
+│   │           Custom Authorizer Configuration           │   │
+│   │                                                     │   │
+│   │   Type: ORACLE_FUNCTIONS  ◄── Native integration    │   │
+│   │   Function ID: ocid1.fnfunc...apigw_authzr          │   │
+│   │                                                     │   │
+│   │   ✗ Container Instances not supported here          │   │
+│   └─────────────────────────────────────────────────────┘   │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+#### 2. Serverless Cost Model
+
+For a POC or low-traffic application, Functions scale to zero - you only pay per invocation. Container Instances run continuously and bill for uptime even when idle.
+
+#### 3. No Infrastructure Management
+
+No need to configure container orchestration, health checks, networking, or load balancing. OCI Functions handles all of this automatically.
+
+#### 4. Event-Driven Fit
+
+Authentication events (login, callback, logout) are sporadic, not continuous - ideal for the serverless model.
+
+#### Comparison
+
+| Aspect | OCI Functions | OCI Container Instances |
+|--------|---------------|------------------------|
+| API Gateway Authorizer | Native support | Not supported |
+| Scaling | Automatic (to zero) | Manual / always-on |
+| Cold start | 30-60+ seconds | None (always running) |
+| Cost model | Pay per invocation | Pay for uptime |
+| Infrastructure | Fully managed | You manage containers |
+| Best for | Sporadic, event-driven | Steady, long-running |
+
+#### Trade-off: Cold Start Latency
+
+The main downside of OCI Functions is cold start latency (30-60+ seconds when idle). This is addressed in the [Deployment Guide Phase 11: Function Warmup](./DEPLOYMENT_GUIDE.md#phase-11-function-warmup-optional) with OCI-native solutions like Alarms + Notifications.
+
+#### When to consider Container Instances
+
+Container Instances might be better if you have:
+- Steady, predictable traffic (no idle periods)
+- Long-running processes (beyond Functions' 5-minute limit)
+- Need to avoid cold start latency entirely
+- Custom networking requirements
+
+For this OIDC authentication solution, the native API Gateway authorizer integration makes OCI Functions the clear choice.
 
 ---
 
