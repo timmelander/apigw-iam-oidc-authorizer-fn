@@ -25,13 +25,22 @@ This document provides monthly cost estimates for running the OCI API Gateway + 
 
 ## Warmup Invocations (Fixed Cost)
 
-To prevent cold starts, a scheduler hits the health endpoint:
+To prevent cold starts, periodic health checks keep functions warm:
 
 ```
 12 calls/hour × 24 hours × 30 days = 8,640 invocations/month
 ```
 
-This adds ~$0.50-1.00/month but ensures consistent response times.
+### Warmup Options and Costs
+
+| Option | Monthly Cost | Notes |
+|--------|--------------|-------|
+| OCI Health Checks | ~$8.64 | $0.001/check × 8,640 checks |
+| Cron on backend compute | $0 | If you already have a backend server |
+| Always Free compute + cron | $0 | Use OCI's free tier VM |
+| Load Balancer health check | $0 | If using LB (production setup) |
+
+> **Recommendation**: If deploying with a backend compute instance, use a simple cron job to hit `/health` and `/auth/login` every 5 minutes at no additional cost.
 
 ## Monthly Cost Estimates
 
@@ -46,7 +55,7 @@ Small application or internal tool.
 | **OCI Cache (Redis)** | 1 node, 2GB memory | $28.87 |
 | **OCI IAM Identity Domain** | 1 domain | $3.47 |
 | **OCI Vault** | 1 vault + 1 key + secrets | ~$1.00 |
-| **OCI Scheduler** | Resource Scheduler (free tier) | $0.00 |
+| **Warmup (cron)** | Using backend compute | $0.00 |
 | | **Total** | **~$40/month** |
 
 ### Tier 2: 50,000 Logins/Month
@@ -60,7 +69,7 @@ Medium application with regular traffic.
 | **OCI Cache (Redis)** | 1 node, 2GB memory | $28.87 |
 | **OCI IAM Identity Domain** | 1 domain | $3.47 |
 | **OCI Vault** | 1 vault + 1 key + secrets | ~$1.00 |
-| **OCI Scheduler** | Resource Scheduler (free tier) | $0.00 |
+| **Warmup (cron)** | Using backend compute | $0.00 |
 | | **Total** | **~$66/month** |
 
 ### Tier 3: 100,000 Logins/Month
@@ -74,7 +83,7 @@ Large application with high traffic.
 | **OCI Cache (Redis)** | 1 node, 2GB memory (consider 4GB for high traffic) | $28.87 |
 | **OCI IAM Identity Domain** | 1 domain | $3.47 |
 | **OCI Vault** | 1 vault + 1 key + secrets | ~$1.00 |
-| **OCI Scheduler** | Resource Scheduler (free tier) | $0.00 |
+| **Warmup (cron)** | Using backend compute | $0.00 |
 | | **Total** | **~$99/month** |
 
 ## Cost Summary Table
