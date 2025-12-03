@@ -880,9 +880,8 @@ echo "Authorizer: $AUTHZR_FN_OCID"
 
 ### 8.0 Set Identity Domain URL
 
+Set your Identity Domain base URL (from OCI Console → Identity → Domains), or use the CLI command from the collapsible section above:
 ```bash
-# Set your Identity Domain base URL (from OCI Console → Identity → Domains)
-# Or use the CLI command from the collapsible section above
 export OCI_IAM_BASE_URL=<iam-domain-url>
 ```
 
