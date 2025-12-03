@@ -1103,4 +1103,4 @@ See [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) for common issues and solutions.
 
 - [CONFIGURATION.md](./CONFIGURATION.md) - Customize settings
 - [SECURITY.md](./SECURITY.md) - Production hardening
-- [DEVELOPMENT.md](./DEVELOPMENT.md) - Extend the solution
+- [DEV_GUIDE.md](./DEV_GUIDE.md) - Extend the solution
