@@ -825,7 +825,7 @@ export GATEWAY_URL=$(oci api-gateway deployment list --compartment-id $COMPARTME
 export VAULT_OCID=$(oci kms management vault list --compartment-id $COMPARTMENT_OCID --all --query 'data[?contains("display-name", `apigw-oidc`)].id | [0]' --raw-output)
 export CLIENT_CREDS_SECRET_OCID=$(oci vault secret list --compartment-id $COMPARTMENT_OCID --vault-id $VAULT_OCID --name "oidc-client-credentials" --query 'data[0].id' --raw-output)
 export PEPPER_SECRET_OCID=$(oci vault secret list --compartment-id $COMPARTMENT_OCID --vault-id $VAULT_OCID --name "hkdf-pepper" --query 'data[0].id' --raw-output)
-export CACHE_OCID=$(oci redis redis-cluster redis-cluster-summary list-redis-clusters --compartment-id $COMPARTMENT_OCID --all | jq -r '.data.items[] | select(."display-name" == "apigw-oidc-cache") | .id')
+export CACHE_OCID=${CACHE_OCID:-$(oci redis redis-cluster redis-cluster-summary list-redis-clusters --compartment-id $COMPARTMENT_OCID --all | jq -r '.data.items[] | select(."display-name" == "apigw-oidc-cache") | .id')}
 export CACHE_ENDPOINT=$(oci redis redis-cluster redis-cluster get --redis-cluster-id $CACHE_OCID | jq -r '.data["primary-fqdn"]')
 ```
 
