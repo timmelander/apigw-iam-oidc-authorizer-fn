@@ -189,6 +189,7 @@ BUILD & DEPLOY (Development Time)
 | [Security](./docs/SECURITY.md) | Security architecture and production hardening |
 | [API Reference](./docs/API_REFERENCE.md) | All endpoints with request/response examples |
 | [FAQ](./docs/FAQ.md) | Frequently asked questions |
+| [Cost Estimate](./docs/COST_ESTIMATE.md) | Monthly cost estimates by usage tier |
 
 ### Reference
 
