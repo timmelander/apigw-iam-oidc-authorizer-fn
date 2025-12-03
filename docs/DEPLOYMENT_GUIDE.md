@@ -813,53 +813,19 @@ export TENANCY_OCID="<your-tenancy-ocid>"
 export SUPPRESS_LABEL_WARNING=True
 ```
 
-**Step 2:** Run each command one at a time (copy one line, run it, then the next):
-
-Identity Domain URL:
+**Step 2:** Auto-fetch all variables (Identity Domain, Functions, Gateway, Vault, Cache):
 ```bash
 export OCI_IAM_BASE_URL=$(oci iam domain list --compartment-id $TENANCY_OCID --query 'data[0].url' --raw-output)
-```
-
-Functions Application:
-```bash
 export FN_APP_OCID=$(oci fn application list --compartment-id $COMPARTMENT_OCID --display-name "apigw-oidc-app" --query 'data[0].id' --raw-output)
-```
-
-Function OCIDs:
-```bash
 export OIDC_AUTHN_FN_OCID=$(oci fn function list --application-id $FN_APP_OCID --all --query 'data[?"display-name"==`oidc_authn`].id | [0]' --raw-output)
-```
-```bash
 export OIDC_CALLBACK_FN_OCID=$(oci fn function list --application-id $FN_APP_OCID --all --query 'data[?"display-name"==`oidc_callback`].id | [0]' --raw-output)
-```
-```bash
 export OIDC_LOGOUT_FN_OCID=$(oci fn function list --application-id $FN_APP_OCID --all --query 'data[?"display-name"==`oidc_logout`].id | [0]' --raw-output)
-```
-```bash
 export AUTHZR_FN_OCID=$(oci fn function list --application-id $FN_APP_OCID --all --query 'data[?"display-name"==`apigw_authzr`].id | [0]' --raw-output)
-```
-
-API Gateway URL:
-```bash
 export GATEWAY_URL=$(oci api-gateway deployment list --compartment-id $COMPARTMENT_OCID --display-name "apigw-oidc-deployment" --query 'data.items[0].endpoint' --raw-output)
-```
-
-Vault and Secrets:
-```bash
 export VAULT_OCID=$(oci kms management vault list --compartment-id $COMPARTMENT_OCID --all --query 'data[?contains("display-name", `apigw-oidc`)].id | [0]' --raw-output)
-```
-```bash
 export CLIENT_CREDS_SECRET_OCID=$(oci vault secret list --compartment-id $COMPARTMENT_OCID --vault-id $VAULT_OCID --name "oidc-client-credentials" --query 'data[0].id' --raw-output)
-```
-```bash
 export PEPPER_SECRET_OCID=$(oci vault secret list --compartment-id $COMPARTMENT_OCID --vault-id $VAULT_OCID --name "hkdf-pepper" --query 'data[0].id' --raw-output)
-```
-
-OCI Cache endpoint:
-```bash
-export CACHE_CLUSTER_OCID=$(oci redis redis-cluster redis-cluster-summary list-redis-clusters --compartment-id $COMPARTMENT_OCID --all --query 'data.items[?"display-name"==`apigw-oidc-cache`].id | [0]' --raw-output)
-```
-```bash
+export CACHE_CLUSTER_OCID=$(oci redis redis-cluster redis-cluster-summary list-redis-clusters --compartment-id $COMPARTMENT_OCID --all | jq -r '.data.items[] | select(."display-name" == "apigw-oidc-cache") | .id')
 export CACHE_ENDPOINT=$(oci redis redis-cluster redis-cluster get --redis-cluster-id $CACHE_CLUSTER_OCID --query 'data."primary-fqdn"' --raw-output)
 ```
 
