@@ -700,7 +700,6 @@ In OCI Console:
 5. **Allowed grant types**:
    - Enable **Authorization Code** grant
    - Enable **Refresh token**
-   - Enable **PKCE** (required)
 6. **Redirect URLs**:
    - **Redirect URL**: `$GATEWAY_URL/auth/callback` (use your gateway URL)
    - **Post-logout redirect URL**: `$GATEWAY_URL/logged-out`
