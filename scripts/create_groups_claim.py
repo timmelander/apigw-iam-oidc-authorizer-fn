@@ -46,16 +46,19 @@ def get_access_token():
 def create_groups_claim(identity_domain_url):
     """Create custom claim for groups in ID token."""
 
-    config = oci.config.from_file()
+    signer = get_oci_signer()
 
-    # Create a signer for the Identity Domains API
-    signer = oci.Signer(
-        tenancy=config["tenancy"],
-        user=config["user"],
-        fingerprint=config["fingerprint"],
-        private_key_file_location=config["key_file"],
-        pass_phrase=config.get("pass_phrase")
-    )
+    # Check if claim already exists
+    existing_claims = get_existing_claims(identity_domain_url, signer)
+    claim_name = "user_groups"
+
+    if claim_name in existing_claims:
+        existing = existing_claims[claim_name]
+        print(f"\n✓ Custom claim '{claim_name}' already exists!")
+        print(f"  Value: {existing.get('value')}")
+        print(f"  Token Type: {existing.get('tokenType')}")
+        print("\nNo action needed - claim is already configured.")
+        return True
 
     # Custom Claims endpoint
     endpoint = f"{identity_domain_url}/admin/v1/CustomClaims"
@@ -67,7 +70,7 @@ def create_groups_claim(identity_domain_url):
         "schemas": [
             "urn:ietf:params:scim:schemas:oracle:idcs:CustomClaim"
         ],
-        "name": "user_groups",
+        "name": claim_name,
         "value": "$(user.groups[*].display)",
         "expression": True,
         "mode": "always",
@@ -96,18 +99,23 @@ def create_groups_claim(identity_domain_url):
 
     if response.status_code in [200, 201]:
         print("\n✓ Custom claim created successfully!")
-        print("Users will now have 'groups' claim in their tokens after re-authentication.")
+        print("Users will now have 'user_groups' claim in their tokens after re-authentication.")
+        return True
+    elif response.status_code == 409:
+        print("\n✓ Custom claim already exists (409 conflict).")
+        print("No action needed - claim is already configured.")
+        return True
     else:
         print(f"\n✗ Failed to create custom claim: {response.status_code}")
         if response.status_code == 401:
             print("\nNote: You may need to use OAuth2 client credentials instead of OCI API signature.")
             print("Try using the OCI Console: Identity & Security > Domains > [Your Domain] > Settings")
+        return False
 
-def list_custom_claims(identity_domain_url):
-    """List existing custom claims."""
+def get_oci_signer():
+    """Create OCI signer for API authentication."""
     config = oci.config.from_file()
-
-    signer = oci.Signer(
+    return oci.Signer(
         tenancy=config["tenancy"],
         user=config["user"],
         fingerprint=config["fingerprint"],
@@ -115,6 +123,22 @@ def list_custom_claims(identity_domain_url):
         pass_phrase=config.get("pass_phrase")
     )
 
+def get_existing_claims(identity_domain_url, signer):
+    """Get existing custom claims as a dict keyed by name."""
+    endpoint = f"{identity_domain_url}/admin/v1/CustomClaims"
+    headers = {"Accept": "application/json"}
+
+    response = requests.get(endpoint, headers=headers, auth=signer)
+
+    if response.status_code == 200:
+        data = response.json()
+        claims = data.get("Resources", [])
+        return {claim.get("name"): claim for claim in claims}
+    return {}
+
+def list_custom_claims(identity_domain_url):
+    """List existing custom claims."""
+    signer = get_oci_signer()
     endpoint = f"{identity_domain_url}/admin/v1/CustomClaims"
 
     headers = {
@@ -139,8 +163,10 @@ def list_custom_claims(identity_domain_url):
                 print(f"  - {claim.get('name')}: {claim.get('value')} (tokenType: {claim.get('tokenType')})")
         else:
             print("\nNo custom claims configured.")
+        return claims
     else:
         print(f"Response: {response.text}")
+        return []
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -187,12 +213,11 @@ if __name__ == "__main__":
         print("=" * 60)
         print()
 
-        # First list existing claims
-        print("Checking existing custom claims...")
-        list_custom_claims(identity_domain_url)
+        # Create claim (will check if exists first)
+        create_groups_claim(identity_domain_url)
 
         print()
         print("-" * 60)
-        print("Creating groups custom claim...")
+        print("Current custom claims:")
         print("-" * 60)
-        create_groups_claim(identity_domain_url)
+        list_custom_claims(identity_domain_url)
