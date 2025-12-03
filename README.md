@@ -184,7 +184,7 @@ BUILD & DEPLOY (Development Time)
 | [Deployment Guide](./docs/DEPLOYMENT_GUIDE.md) | Fresh tenancy deployment (zero to working) |
 | [Terraform](./terraform/README.md) | Infrastructure as Code deployment (POC and Production) |
 | [Configuration](./docs/CONFIGURATION.md) | All environment variables, secrets, and settings |
-| [Dev Guide](./docs/DEV_GUIDE.md) | Code structure, local testing, extending the solution |
+| [Development Guide](./docs/DEV_GUIDE.md) | Code structure, local testing, extending the solution |
 | [Troubleshooting](./docs/TROUBLESHOOTING.md) | Common issues and debugging |
 | [Security](./docs/SECURITY.md) | Security architecture and production hardening |
 | [API Reference](./docs/API_REFERENCE.md) | All endpoints with request/response examples |
