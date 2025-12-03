@@ -806,30 +806,37 @@ oci iam policy create \
 <details>
 <summary><strong>Re-fetch variables if starting a new shell session</strong></summary>
 
-**Step 1:** Set your compartment OCID (only manual input required):
+**Step 1:** Set your compartment and tenancy OCIDs:
 ```bash
 export COMPARTMENT_OCID="<your-compartment-ocid>"
+export TENANCY_OCID="<your-tenancy-ocid>"
 ```
 
-**Step 2:** Run these commands to auto-fetch all other variables:
+**Step 2:** Run these commands one at a time to auto-fetch variables:
 ```bash
-export OCI_IAM_BASE_URL=$(oci iam domain list --compartment-id $COMPARTMENT_OCID --query 'data[0].url' --raw-output)
+# Identity Domain (searches in tenancy root - where domains typically live)
+export OCI_IAM_BASE_URL=$(oci iam domain list --compartment-id $TENANCY_OCID --query 'data[0].url' --raw-output)
 
+# Functions Application
 export FN_APP_OCID=$(oci fn application list --compartment-id $COMPARTMENT_OCID --display-name "apigw-oidc-app" --query 'data[0].id' --raw-output)
 
-export OIDC_AUTHN_FN_OCID=$(oci fn function list --application-id $FN_APP_OCID --all | jq -r '.data[] | select(.["display-name"] == "oidc_authn") | .id')
-export OIDC_CALLBACK_FN_OCID=$(oci fn function list --application-id $FN_APP_OCID --all | jq -r '.data[] | select(.["display-name"] == "oidc_callback") | .id')
-export OIDC_LOGOUT_FN_OCID=$(oci fn function list --application-id $FN_APP_OCID --all | jq -r '.data[] | select(.["display-name"] == "oidc_logout") | .id')
-export AUTHZR_FN_OCID=$(oci fn function list --application-id $FN_APP_OCID --all | jq -r '.data[] | select(.["display-name"] == "apigw_authzr") | .id')
+# Function OCIDs
+export OIDC_AUTHN_FN_OCID=$(oci fn function list --application-id $FN_APP_OCID --all --query 'data[?\"display-name\"==`oidc_authn`].id | [0]' --raw-output)
+export OIDC_CALLBACK_FN_OCID=$(oci fn function list --application-id $FN_APP_OCID --all --query 'data[?\"display-name\"==`oidc_callback`].id | [0]' --raw-output)
+export OIDC_LOGOUT_FN_OCID=$(oci fn function list --application-id $FN_APP_OCID --all --query 'data[?\"display-name\"==`oidc_logout`].id | [0]' --raw-output)
+export AUTHZR_FN_OCID=$(oci fn function list --application-id $FN_APP_OCID --all --query 'data[?\"display-name\"==`apigw_authzr`].id | [0]' --raw-output)
 
+# API Gateway URL
 export GATEWAY_URL=$(oci api-gateway deployment list --compartment-id $COMPARTMENT_OCID --display-name "apigw-oidc-deployment" --query 'data.items[0].endpoint' --raw-output)
 
-export VAULT_OCID=$(oci kms management vault list --compartment-id $COMPARTMENT_OCID | jq -r '.data[] | select(.["display-name"] | contains("apigw-oidc")) | .id')
+# Vault and Secrets
+export VAULT_OCID=$(oci kms management vault list --compartment-id $COMPARTMENT_OCID --all --query 'data[?contains(\"display-name\", `apigw-oidc`)].id | [0]' --raw-output)
 export CLIENT_CREDS_SECRET_OCID=$(oci vault secret list --compartment-id $COMPARTMENT_OCID --vault-id $VAULT_OCID --name "oidc-client-credentials" --query 'data[0].id' --raw-output)
 export PEPPER_SECRET_OCID=$(oci vault secret list --compartment-id $COMPARTMENT_OCID --vault-id $VAULT_OCID --name "hkdf-pepper" --query 'data[0].id' --raw-output)
 
-export CACHE_CLUSTER_OCID=$(oci redis redis-cluster redis-cluster-summary list-redis-clusters --compartment-id $COMPARTMENT_OCID | jq -r '.data.items[] | select(.["display-name"] == "apigw-oidc-cache") | .id')
-export CACHE_ENDPOINT=$(oci redis redis-cluster redis-cluster get --redis-cluster-id $CACHE_CLUSTER_OCID --query 'data."primary-fqdn"' --raw-output)
+# OCI Cache endpoint
+export CACHE_CLUSTER_OCID=$(oci redis redis-cluster redis-cluster-summary list-redis-clusters --compartment-id $COMPARTMENT_OCID --all --query 'data.items[?\"display-name\"==`apigw-oidc-cache`].id | [0]' --raw-output)
+export CACHE_ENDPOINT=$(oci redis redis-cluster redis-cluster get --redis-cluster-id $CACHE_CLUSTER_OCID --query 'data.\"primary-fqdn\"' --raw-output)
 ```
 
 **Step 3:** Verify all variables are set:
@@ -844,6 +851,8 @@ echo "OIDC Callback: $OIDC_CALLBACK_FN_OCID"
 echo "OIDC Logout: $OIDC_LOGOUT_FN_OCID"
 echo "Authorizer: $AUTHZR_FN_OCID"
 ```
+
+> **Tip:** To suppress the OCI API key warnings, run: `export SUPPRESS_LABEL_WARNING=True`
 
 </details>
 
