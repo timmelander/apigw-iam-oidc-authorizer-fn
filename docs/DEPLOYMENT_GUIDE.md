@@ -888,7 +888,7 @@ export OIDC_AUTHN_FN_OCID=$(oci fn function list --application-id $FN_APP_OCID -
 export OIDC_CALLBACK_FN_OCID=$(oci fn function list --application-id $FN_APP_OCID --all --query 'data[?"display-name"==`oidc_callback`].id | [0]' --raw-output)
 export OIDC_LOGOUT_FN_OCID=$(oci fn function list --application-id $FN_APP_OCID --all --query 'data[?"display-name"==`oidc_logout`].id | [0]' --raw-output)
 export AUTHZR_FN_OCID=$(oci fn function list --application-id $FN_APP_OCID --all --query 'data[?"display-name"==`apigw_authzr`].id | [0]' --raw-output)
-export GATEWAY_URL=$(oci api-gateway deployment list --compartment-id $COMPARTMENT_OCID --display-name "apigw-oidc-deployment" --query 'data.items[0].endpoint' --raw-output)
+export GATEWAY_URL=$(oci api-gateway deployment list --compartment-id $COMPARTMENT_OCID --display-name "oidc-auth-deployment" --query 'data.items[0].endpoint' --raw-output)
 export VAULT_OCID=$(oci kms management vault list --compartment-id $COMPARTMENT_OCID --all --query 'data[?contains("display-name", `apigw-oidc`)].id | [0]' --raw-output)
 export CLIENT_CREDS_SECRET_OCID=$(oci vault secret list --compartment-id $COMPARTMENT_OCID --vault-id $VAULT_OCID --name "oidc-client-credentials" --query 'data[0].id' --raw-output)
 export PEPPER_SECRET_OCID=$(oci vault secret list --compartment-id $COMPARTMENT_OCID --vault-id $VAULT_OCID --name "hkdf-pepper" --query 'data[0].id' --raw-output)
