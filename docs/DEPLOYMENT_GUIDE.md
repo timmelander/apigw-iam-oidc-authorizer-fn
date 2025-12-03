@@ -806,71 +806,34 @@ oci iam policy create \
 <details>
 <summary><strong>Re-fetch variables if starting a new shell session</strong></summary>
 
+**Step 1:** Set your compartment OCID (only manual input required):
 ```bash
-# Only manual input required - set your compartment OCID
 export COMPARTMENT_OCID="<your-compartment-ocid>"
 ```
 
+**Step 2:** Run these commands to auto-fetch all other variables:
 ```bash
-# All remaining variables are auto-fetched from OCI
+export OCI_IAM_BASE_URL=$(oci iam domain list --compartment-id $COMPARTMENT_OCID --query 'data[0].url' --raw-output)
 
-# Identity Domain URL
-OCI_IAM_BASE_URL=$(oci iam domain list \
-  --compartment-id $COMPARTMENT_OCID \
-  --query 'data[0].url' --raw-output)
+export FN_APP_OCID=$(oci fn application list --compartment-id $COMPARTMENT_OCID --display-name "apigw-oidc-app" --query 'data[0].id' --raw-output)
 
-# Functions Application and Function OCIDs
-FN_APP_OCID=$(oci fn application list \
-  --compartment-id $COMPARTMENT_OCID \
-  --display-name "apigw-oidc-app" \
-  --query 'data[0].id' --raw-output)
+export OIDC_AUTHN_FN_OCID=$(oci fn function list --application-id $FN_APP_OCID --all | jq -r '.data[] | select(.["display-name"] == "oidc_authn") | .id')
+export OIDC_CALLBACK_FN_OCID=$(oci fn function list --application-id $FN_APP_OCID --all | jq -r '.data[] | select(.["display-name"] == "oidc_callback") | .id')
+export OIDC_LOGOUT_FN_OCID=$(oci fn function list --application-id $FN_APP_OCID --all | jq -r '.data[] | select(.["display-name"] == "oidc_logout") | .id')
+export AUTHZR_FN_OCID=$(oci fn function list --application-id $FN_APP_OCID --all | jq -r '.data[] | select(.["display-name"] == "apigw_authzr") | .id')
 
-OIDC_AUTHN_FN_OCID=$(oci fn function list --application-id $FN_APP_OCID --all \
-  | jq -r '.data[] | select(.["display-name"] == "oidc_authn") | .id')
-OIDC_CALLBACK_FN_OCID=$(oci fn function list --application-id $FN_APP_OCID --all \
-  | jq -r '.data[] | select(.["display-name"] == "oidc_callback") | .id')
-OIDC_LOGOUT_FN_OCID=$(oci fn function list --application-id $FN_APP_OCID --all \
-  | jq -r '.data[] | select(.["display-name"] == "oidc_logout") | .id')
-AUTHZR_FN_OCID=$(oci fn function list --application-id $FN_APP_OCID --all \
-  | jq -r '.data[] | select(.["display-name"] == "apigw_authzr") | .id')
+export GATEWAY_URL=$(oci api-gateway deployment list --compartment-id $COMPARTMENT_OCID --display-name "apigw-oidc-deployment" --query 'data.items[0].endpoint' --raw-output)
 
-# API Gateway URL
-GATEWAY_HOSTNAME=$(oci api-gateway deployment list \
-  --compartment-id $COMPARTMENT_OCID \
-  --display-name "apigw-oidc-deployment" \
-  --query 'data.items[0].endpoint' --raw-output | sed 's|https://||')
-GATEWAY_URL="https://$GATEWAY_HOSTNAME"
+export VAULT_OCID=$(oci kms management vault list --compartment-id $COMPARTMENT_OCID | jq -r '.data[] | select(.["display-name"] | contains("apigw-oidc")) | .id')
+export CLIENT_CREDS_SECRET_OCID=$(oci vault secret list --compartment-id $COMPARTMENT_OCID --vault-id $VAULT_OCID --name "oidc-client-credentials" --query 'data[0].id' --raw-output)
+export PEPPER_SECRET_OCID=$(oci vault secret list --compartment-id $COMPARTMENT_OCID --vault-id $VAULT_OCID --name "hkdf-pepper" --query 'data[0].id' --raw-output)
 
-# Vault and Secret OCIDs
-VAULT_OCID=$(oci kms management vault list \
-  --compartment-id $COMPARTMENT_OCID \
-  --query 'data[?contains("display-name", `apigw-oidc`)].id | [0]' --raw-output)
-CLIENT_CREDS_SECRET_OCID=$(oci vault secret list \
-  --compartment-id $COMPARTMENT_OCID \
-  --vault-id $VAULT_OCID \
-  --name "oidc-client-credentials" \
-  --query 'data[0].id' --raw-output)
-PEPPER_SECRET_OCID=$(oci vault secret list \
-  --compartment-id $COMPARTMENT_OCID \
-  --vault-id $VAULT_OCID \
-  --name "hkdf-pepper" \
-  --query 'data[0].id' --raw-output)
+export CACHE_CLUSTER_OCID=$(oci redis redis-cluster redis-cluster-summary list-redis-clusters --compartment-id $COMPARTMENT_OCID | jq -r '.data.items[] | select(.["display-name"] == "apigw-oidc-cache") | .id')
+export CACHE_ENDPOINT=$(oci redis redis-cluster redis-cluster get --redis-cluster-id $CACHE_CLUSTER_OCID --query 'data."primary-fqdn"' --raw-output)
+```
 
-# OCI Cache endpoint
-CACHE_CLUSTER_OCID=$(oci redis redis-cluster list \
-  --compartment-id $COMPARTMENT_OCID \
-  --display-name "apigw-oidc-cache" \
-  --query 'data.items[0].id' --raw-output)
-CACHE_ENDPOINT=$(oci redis redis-cluster get \
-  --redis-cluster-id $CACHE_CLUSTER_OCID \
-  --query 'data."primary-fqdn"' --raw-output)
-
-# Export all variables
-export OCI_IAM_BASE_URL FN_APP_OCID GATEWAY_URL CACHE_ENDPOINT
-export OIDC_AUTHN_FN_OCID OIDC_CALLBACK_FN_OCID OIDC_LOGOUT_FN_OCID AUTHZR_FN_OCID
-export VAULT_OCID CLIENT_CREDS_SECRET_OCID PEPPER_SECRET_OCID
-
-# Verify all variables
+**Step 3:** Verify all variables are set:
+```bash
 echo "Identity Domain: $OCI_IAM_BASE_URL"
 echo "Gateway URL: $GATEWAY_URL"
 echo "Cache Endpoint: $CACHE_ENDPOINT"
