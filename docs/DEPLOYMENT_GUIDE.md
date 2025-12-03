@@ -914,7 +914,7 @@ For testing, deploy a simple backend:
 
 ### 9.1 Create Compute Instance
 
-Get the availability domain and Oracle Linux 8 image OCID, launch the instance, then set the instance OCID:
+Get the availability domain and Oracle Linux 10 image OCID, launch the instance, then set the instance OCID:
 
 ```bash
 export AVAILABILITY_DOMAIN=$(oci iam availability-domain list --compartment-id $COMPARTMENT_OCID | jq -r '.data[0].name')
@@ -922,7 +922,7 @@ export AVAILABILITY_DOMAIN=$(oci iam availability-domain list --compartment-id $
 export BACKEND_IMAGE_OCID=$(oci compute image list \
   --compartment-id $TENANCY_OCID \
   --operating-system "Oracle Linux" \
-  --operating-system-version "8" \
+  --operating-system-version "10" \
   --sort-by TIMECREATED \
   --sort-order DESC \
   --limit 1 \
