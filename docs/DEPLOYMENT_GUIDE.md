@@ -95,8 +95,8 @@ Full deployment: 60-90 minutes (includes resource provisioning wait times)
 
 **Step 1: Get your tenancy OCID using OCI CLI**
 
+Use OCI CLI to retrieve your tenancy OCID:
 ```bash
-# Use OCI CLI to retrieve your tenancy OCID
 oci iam compartment list \
   --all \
   --compartment-id-in-subtree true \
@@ -110,32 +110,32 @@ This command will output your tenancy OCID (e.g., `ocid1.tenancy.oc1..aaaaaaaa..
 
 **Step 2: Set environment variables**
 
+Set your tenancy OCID (paste the output from Step 1) and region (change to your target region):
 ```bash
-# Set your tenancy OCID (paste the output from Step 1)
 export TENANCY_OCID=<tenancy-ocid>
-
-# Set your region (change to your target region)
 export REGION="us-chicago-1"
 ```
 
 **Step 3: Verify (optional)**
 
+Verify tenancy OCID is set:
 ```bash
-# Verify tenancy OCID is set
 echo "Tenancy OCID: $TENANCY_OCID"
 echo "Region: $REGION"
 ```
 
 ### 1.1 Create Compartment
 
+Create compartment for this project:
 ```bash
-# Create compartment for this project
 oci iam compartment create \
   --compartment-id $TENANCY_OCID \
   --name "apigw-oidc" \
   --description "API Gateway OIDC Authentication POC"
+```
 
-# Copy the compartment OCID from output
+Copy the compartment OCID from the output and set it:
+```bash
 export COMPARTMENT_OCID=<compartment-ocid>
 ```
 
@@ -175,70 +175,91 @@ export NAT_OCID=<nat-gateway-ocid>
 
 ### 1.5 Create Service Gateway
 
+Get service OCID for "All <region> Services in Oracle Services Network":
 ```bash
-# Get service OCID for "All <region> Services in Oracle Services Network"
 export SERVICE_OCID=$(oci network service list --all | jq -r '.data[] | select(.name | contains("All")) | .id')
+```
 
-# Create service gateway
+Create the service gateway:
+```bash
 oci network service-gateway create \
   --compartment-id $COMPARTMENT_OCID \
   --vcn-id $VCN_OCID \
   --display-name "apigw-oidc-sgw" \
   --services "[{\"serviceId\": \"$SERVICE_OCID\"}]"
+```
 
+Set the service gateway OCID:
+```bash
 export SGW_OCID=<service-gateway-ocid>
 ```
 
 ### 1.6 Create Route Tables
 
+**Public route table** (for API Gateway):
 ```bash
-# Public route table (for API Gateway)
 oci network route-table create \
   --compartment-id $COMPARTMENT_OCID \
   --vcn-id $VCN_OCID \
   --display-name "public-rt" \
   --route-rules "[{\"destination\": \"0.0.0.0/0\", \"destinationType\": \"CIDR_BLOCK\", \"networkEntityId\": \"$IGW_OCID\"}]"
+```
 
+Set the public route table OCID:
+```bash
 export PUBLIC_RT_OCID=<public-route-table-ocid>
+```
 
-# Private route table (for Functions, Cache, Backend)
+**Private route table** (for Functions, Cache, Backend):
+```bash
 oci network route-table create \
   --compartment-id $COMPARTMENT_OCID \
   --vcn-id $VCN_OCID \
   --display-name "private-rt" \
   --route-rules "[{\"destination\": \"0.0.0.0/0\", \"destinationType\": \"CIDR_BLOCK\", \"networkEntityId\": \"$NAT_OCID\"}]"
+```
 
+Set the private route table OCID:
+```bash
 export PRIVATE_RT_OCID=<private-route-table-ocid>
 ```
 
 ### 1.7 Create Security Lists
 
+**Public security list:**
 ```bash
-# Public security list
 oci network security-list create \
   --compartment-id $COMPARTMENT_OCID \
   --vcn-id $VCN_OCID \
   --display-name "public-sl" \
   --ingress-security-rules '[{"source": "0.0.0.0/0", "protocol": "6", "tcpOptions": {"destinationPortRange": {"min": 443, "max": 443}}}]' \
   --egress-security-rules '[{"destination": "0.0.0.0/0", "protocol": "all"}]'
+```
 
+Set the public security list OCID:
+```bash
 export PUBLIC_SL_OCID=<public-security-list-ocid>
+```
 
-# Private security list
+**Private security list:**
+```bash
 oci network security-list create \
   --compartment-id $COMPARTMENT_OCID \
   --vcn-id $VCN_OCID \
   --display-name "private-sl" \
   --ingress-security-rules '[{"source": "10.0.0.0/16", "protocol": "all"}]' \
   --egress-security-rules '[{"destination": "0.0.0.0/0", "protocol": "all"}]'
+```
 
+Set the private security list OCID:
+```bash
 export PRIVATE_SL_OCID=<private-security-list-ocid>
 ```
 
 ### 1.8 Create Subnets
 
+**Public subnet** (for API Gateway):
 ```bash
-# Public subnet (for API Gateway)
 oci network subnet create \
   --compartment-id $COMPARTMENT_OCID \
   --vcn-id $VCN_OCID \
@@ -246,10 +267,15 @@ oci network subnet create \
   --cidr-block "10.0.0.0/24" \
   --route-table-id $PUBLIC_RT_OCID \
   --security-list-ids "[\"$PUBLIC_SL_OCID\"]"
+```
 
+Set the public subnet OCID:
+```bash
 export PUBLIC_SUBNET_OCID=<public-subnet-ocid>
+```
 
-# Private subnet (for Functions, Cache, Backend)
+**Private subnet** (for Functions, Cache, Backend):
+```bash
 oci network subnet create \
   --compartment-id $COMPARTMENT_OCID \
   --vcn-id $VCN_OCID \
@@ -258,7 +284,10 @@ oci network subnet create \
   --prohibit-public-ip-on-vnic true \
   --route-table-id $PRIVATE_RT_OCID \
   --security-list-ids "[\"$PRIVATE_SL_OCID\"]"
+```
 
+Set the private subnet OCID:
+```bash
 export PRIVATE_SUBNET_OCID=<private-subnet-ocid>
 ```
 
@@ -268,14 +297,16 @@ export PRIVATE_SUBNET_OCID=<private-subnet-ocid>
 
 ### 2.1 Create Vault
 
+Create the vault:
 ```bash
-# Create vault
 oci kms management vault create \
   --compartment-id $COMPARTMENT_OCID \
   --display-name "apigw-oidc-vault" \
   --vault-type DEFAULT
+```
 
-# Get and export vault OCID automatically
+Get and export vault OCID automatically:
+```bash
 export VAULT_OCID=$(oci kms management vault list \
   --compartment-id $COMPARTMENT_OCID \
   --all \
@@ -283,12 +314,15 @@ export VAULT_OCID=$(oci kms management vault list \
   --raw-output)
 
 echo "Vault OCID: $VAULT_OCID"
+```
 
-# Wait for vault to become ACTIVE (2-3 minutes)
-# Check vault status - repeat until lifecycle-state shows "ACTIVE"
+Wait for vault to become ACTIVE (2-3 minutes). Check vault status - repeat until lifecycle-state shows "ACTIVE":
+```bash
 oci kms management vault get --vault-id $VAULT_OCID --query 'data."lifecycle-state"'
+```
 
-# Once ACTIVE, extract vault management endpoint
+Once ACTIVE, extract vault management endpoint:
+```bash
 export VAULT_MGMT_ENDPOINT=$(oci kms management vault get --vault-id $VAULT_OCID --query 'data."management-endpoint"' --raw-output)
 
 echo "Vault Management Endpoint: $VAULT_MGMT_ENDPOINT"
@@ -308,31 +342,40 @@ export KEY_OCID=<key-ocid>
 
 ### 2.3 Create HKDF Pepper Secret
 
+Generate 32-byte random pepper:
 ```bash
-# Generate 32-byte random pepper
 PEPPER=$(openssl rand -base64 32)
+```
 
+Create the pepper secret:
+```bash
 oci vault secret create-base64 \
   --compartment-id $COMPARTMENT_OCID \
   --vault-id $VAULT_OCID \
   --key-id $KEY_OCID \
   --secret-name "hkdf_pepper" \
   --secret-content-content "$PEPPER"
+```
 
+Set the pepper secret OCID:
+```bash
 export PEPPER_SECRET_OCID=<pepper-secret-ocid>
 ```
 
 ### 2.4 Create Client Credentials Secret (Placeholder)
 
+Create a placeholder secret (we'll update this after creating the Identity Domain app):
 ```bash
-# We'll update this after creating the Identity Domain app
 oci vault secret create-base64 \
   --compartment-id $COMPARTMENT_OCID \
   --vault-id $VAULT_OCID \
   --key-id $KEY_OCID \
   --secret-name "oidc_client_credentials" \
   --secret-content-content "$(echo -n '{"client_id":"placeholder","client_secret":"placeholder"}' | base64)"
+```
 
+Set the client credentials secret OCID:
+```bash
 export CLIENT_CREDS_SECRET_OCID=<client-creds-secret-ocid>
 ```
 
@@ -342,6 +385,7 @@ export CLIENT_CREDS_SECRET_OCID=<client-creds-secret-ocid>
 
 ### 3.1 Create OCI Cache Cluster
 
+Create the Redis cache cluster:
 ```bash
 oci redis redis-cluster create \
   --compartment-id $COMPARTMENT_OCID \
@@ -350,17 +394,18 @@ oci redis redis-cluster create \
   --node-memory-in-gbs 2 \
   --software-version "REDIS_7_0" \
   --subnet-id $PRIVATE_SUBNET_OCID
+```
 
-# Wait for cluster to be ACTIVE (10-15 minutes)
+Wait for cluster to be ACTIVE (10-15 minutes), then set the OCID:
+```bash
 export CACHE_OCID=<cache-cluster-ocid>
 ```
 
 ### 3.2 Get Cache Endpoint
 
+Extract the cache endpoint:
 ```bash
-# Extract cache endpoint
-export CACHE_ENDPOINT=$(oci redis redis-cluster redis-cluster \
-get --redis-cluster-id $CACHE_OCID | jq -r '.data["primary-fqdn"]')
+export CACHE_ENDPOINT=$(oci redis redis-cluster redis-cluster get --redis-cluster-id $CACHE_OCID | jq -r '.data["primary-fqdn"]')
 ```
 
 ---
@@ -369,10 +414,9 @@ get --redis-cluster-id $CACHE_OCID | jq -r '.data["primary-fqdn"]')
 
 ### 4.1 Get Registry Namespace
 
-The Fn CLI will create repositories automatically. Get your registry namespace:
+The Fn CLI will create repositories automatically. Get your registry namespace (usually the tenancy namespace):
 
 ```bash
-# Get registry namespace (usually tenancy namespace)
 export REGISTRY_NAMESPACE=$(oci artifacts container configuration get --compartment-id $COMPARTMENT_OCID | jq -r '.data.namespace')
 ```
 
@@ -389,8 +433,8 @@ export FN_APP_OCID=<functions-app-ocid>
 
 ### 4.3 Configure Fn CLI Context
 
+Set your email for OCIR login:
 ```bash
-# Set your email for OCIR login
 export OCIR_USER_EMAIL="your.email@example.com"
 ```
 
@@ -404,13 +448,14 @@ An auth token is required to authenticate with Oracle Cloud Infrastructure Regis
 
 **Option 1: Create via CLI (Recommended)**
 
+Get your user OCID:
 ```bash
-# Get your user OCID
 export USER_OCID=$(oci iam user list --compartment-id $TENANCY_OCID \
   --query "data[?name=='$OCIR_USER_EMAIL'].id | [0]" --raw-output)
+```
 
-# Create the auth token and extract the token value using jq
-# IMPORTANT: Save this token immediately - it cannot be retrieved again after creation
+Create the auth token and extract the token value using jq. **IMPORTANT:** Save this token immediately - it cannot be retrieved again after creation:
+```bash
 export OCIR_AUTH_TOKEN=$(oci iam auth-token create \
   --user-id $USER_OCID \
   --description "OCIR access for Fn CLI" | jq -r '.data.token')
@@ -442,28 +487,30 @@ Example output from `oci iam auth-token create`:
 5. Click **Generate Token**
 6. **Copy the token immediately** - it will not be shown again
 
+Set the auth token from console:
 ```bash
-# Set the auth token from console
 export OCIR_AUTH_TOKEN="your-auth-token"
 ```
 
 **Configure Fn CLI**
 
+List existing contexts:
 ```bash
-# List existing contexts
 fn list context
+```
 
-# Create new context for this region
+Create and configure a new context for this region:
+```bash
 fn create context oci-$REGION --provider oracle
-
-# Configure context
 fn use context oci-$REGION
 fn update context oracle.compartment-id $COMPARTMENT_OCID
 fn update context oracle.profile DEFAULT
 fn update context api-url https://functions.$REGION.oraclecloud.com
 fn update context registry $REGION.ocir.io/$REGISTRY_NAMESPACE/oidc-fn-repo
+```
 
-# Login to container registry
+Login to container registry:
+```bash
 podman login $REGION.ocir.io -u "$REGISTRY_NAMESPACE/oracleidentitycloudservice/$OCIR_USER_EMAIL" -p "$OCIR_AUTH_TOKEN"
 ```
 
@@ -471,12 +518,14 @@ podman login $REGION.ocir.io -u "$REGISTRY_NAMESPACE/oracleidentitycloudservice/
 
 ### 4.4 Deploy Functions
 
+Clone repository:
 ```bash
-# Clone repository
 git clone https://github.com/timmelander/apigw-iam-oidc-authorizer-fn.git
 cd apigw-iam-oidc-authorizer
+```
 
-# Deploy each function
+Deploy each function:
+```bash
 for func in health oidc_authn oidc_callback oidc_logout apigw_authzr; do
   echo "Deploying $func..."
   cd functions/$func
@@ -487,15 +536,17 @@ done
 
 ### 4.5 Get Function OCIDs
 
+Extract function OCIDs automatically:
 ```bash
-# Extract function OCIDs automatically
 export HEALTH_FN_OCID=$(oci fn function list --application-id $FN_APP_OCID --all | jq -r '.data[] | select(.["display-name"] == "health") | .id')
 export OIDC_AUTHN_FN_OCID=$(oci fn function list --application-id $FN_APP_OCID --all | jq -r '.data[] | select(.["display-name"] == "oidc_authn") | .id')
 export OIDC_CALLBACK_FN_OCID=$(oci fn function list --application-id $FN_APP_OCID --all | jq -r '.data[] | select(.["display-name"] == "oidc_callback") | .id')
 export OIDC_LOGOUT_FN_OCID=$(oci fn function list --application-id $FN_APP_OCID --all | jq -r '.data[] | select(.["display-name"] == "oidc_logout") | .id')
 export AUTHZR_FN_OCID=$(oci fn function list --application-id $FN_APP_OCID --all | jq -r '.data[] | select(.["display-name"] == "apigw_authzr") | .id')
+```
 
-# Verify
+Verify the function OCIDs:
+```bash
 echo "Health Function: $HEALTH_FN_OCID"
 echo "OIDC Authn Function: $OIDC_AUTHN_FN_OCID"
 echo "OIDC Callback Function: $OIDC_CALLBACK_FN_OCID"
@@ -509,14 +560,17 @@ echo "Authorizer Function: $AUTHZR_FN_OCID"
 
 ### 5.1 Create API Gateway
 
+Create the API Gateway:
 ```bash
 oci api-gateway gateway create \
   --compartment-id $COMPARTMENT_OCID \
   --display-name "apigw-oidc-gateway" \
   --endpoint-type PUBLIC \
   --subnet-id $PUBLIC_SUBNET_OCID
+```
 
-# Wait for gateway to be ACTIVE (5-10 minutes)
+Wait for gateway to be ACTIVE (5-10 minutes), then set the OCID:
+```bash
 export GATEWAY_OCID=<api-gateway-ocid>
 ```
 
@@ -540,42 +594,49 @@ The deployment specification template (`scripts/api_deployment.template.json`) c
 
 The function OCIDs should already be set from [Section 4.5](#45-get-function-ocids). The backend IP requires completing [Phase 9: Backend Setup](#phase-9-backend-setup-optional) first, or you can use a placeholder and update the deployment later.
 
+Function OCIDs from Section 4.5:
 ```bash
-# Function OCIDs from Section 4.5
 echo "Authorizer Function: $AUTHZR_FN_OCID"
 echo "Health Function: $HEALTH_FN_OCID"
 echo "OIDC Authn Function: $OIDC_AUTHN_FN_OCID"
 echo "OIDC Callback Function: $OIDC_CALLBACK_FN_OCID"
 echo "OIDC Logout Function: $OIDC_LOGOUT_FN_OCID"
+```
 
-# Backend IP from Section 9.3 (or set placeholder if backend not yet deployed)
-# If backend not ready, set a placeholder: export BACKEND_IP="10.0.1.x"
+Backend IP from Section 9.3 (or set placeholder if backend not yet deployed - `export BACKEND_IP="10.0.1.x"`):
+```bash
 echo "Backend IP: $BACKEND_IP"
 ```
 
 <details>
 <summary><strong>If variables are not set (new shell session)</strong></summary>
 
-Re-fetch all required variables using OCI CLI:
+Re-fetch all required variables using OCI CLI.
 
+First, ensure COMPARTMENT_OCID is set:
 ```bash
-# First, ensure COMPARTMENT_OCID is set
 export COMPARTMENT_OCID="<your-compartment-ocid>"
+```
 
-# Get Functions Application OCID
+Get Functions Application OCID:
+```bash
 export FN_APP_OCID=$(oci fn application list \
   --compartment-id $COMPARTMENT_OCID \
   --display-name "apigw-oidc-app" \
   --query 'data[0].id' --raw-output)
+```
 
-# Get all function OCIDs
+Get all function OCIDs:
+```bash
 export HEALTH_FN_OCID=$(oci fn function list --application-id $FN_APP_OCID --all | jq -r '.data[] | select(.["display-name"] == "health") | .id')
 export OIDC_AUTHN_FN_OCID=$(oci fn function list --application-id $FN_APP_OCID --all | jq -r '.data[] | select(.["display-name"] == "oidc_authn") | .id')
 export OIDC_CALLBACK_FN_OCID=$(oci fn function list --application-id $FN_APP_OCID --all | jq -r '.data[] | select(.["display-name"] == "oidc_callback") | .id')
 export OIDC_LOGOUT_FN_OCID=$(oci fn function list --application-id $FN_APP_OCID --all | jq -r '.data[] | select(.["display-name"] == "oidc_logout") | .id')
 export AUTHZR_FN_OCID=$(oci fn function list --application-id $FN_APP_OCID --all | jq -r '.data[] | select(.["display-name"] == "apigw_authzr") | .id')
+```
 
-# Verify function variables
+Verify function variables:
+```bash
 echo "Functions App: $FN_APP_OCID"
 echo "Authorizer: $AUTHZR_FN_OCID"
 echo "Health: $HEALTH_FN_OCID"
@@ -586,11 +647,13 @@ echo "OIDC Logout: $OIDC_LOGOUT_FN_OCID"
 
 **Backend IP:** The backend is created in [Phase 9](#phase-9-backend-setup-optional). If the backend is not yet deployed, use a placeholder IP and update the deployment later:
 
+**Option 1:** Use placeholder (update deployment later after Phase 9):
 ```bash
-# Option 1: Use placeholder (update deployment later after Phase 9)
 export BACKEND_IP="10.0.1.100"
+```
 
-# Option 2: If backend already exists (Phase 9 completed)
+**Option 2:** If backend already exists (Phase 9 completed):
+```bash
 export BACKEND_INSTANCE_OCID=$(oci compute instance list \
   --compartment-id $COMPARTMENT_OCID \
   --display-name "apigw-oidc-backend" \
@@ -608,8 +671,8 @@ echo "Backend IP: $BACKEND_IP"
 
 **Step 2: Generate api_deployment.json from template**
 
+Generate api_deployment.json from template (check template exists, replace placeholders, verify):
 ```bash
-# Generate api_deployment.json from template (check template exists, replace placeholders, verify)
 [ -f scripts/api_deployment.template.json ] || { echo "ERROR: Template file not found at scripts/api_deployment.template.json"; exit 1; } && \
 sed -e "s|<apigw-authzr-fn-ocid>|$AUTHZR_FN_OCID|g" \
     -e "s|<health-fn-ocid>|$HEALTH_FN_OCID|g" \
@@ -623,8 +686,8 @@ grep -E "<[a-z-]+-ocid>|<backend-ip>" scripts/api_deployment.json && echo "ERROR
 
 **Step 3: Create or update the API Gateway deployment**
 
+Check if deployment already exists, then create or update:
 ```bash
-# Check if deployment already exists
 export DEPLOYMENT_OCID=$(oci api-gateway deployment list \
   --compartment-id $COMPARTMENT_OCID \
   --gateway-id $GATEWAY_OCID \
@@ -646,7 +709,6 @@ else
     --path-prefix "/" \
     --specification file://scripts/api_deployment.json
 
-  # Get the new deployment OCID
   export DEPLOYMENT_OCID=$(oci api-gateway deployment list \
     --compartment-id $COMPARTMENT_OCID \
     --gateway-id $GATEWAY_OCID \
@@ -661,8 +723,8 @@ echo "Deployment OCID: $DEPLOYMENT_OCID"
 
 **Step 4: Verify deployment routes**
 
+List all routes configured in the deployment:
 ```bash
-# List all routes configured in the deployment
 oci api-gateway deployment get --deployment-id $DEPLOYMENT_OCID | jq -r '.data.specification.routes[].path'
 ```
 
@@ -718,12 +780,13 @@ To include user profile data in tokens:
 
 > **Important:** Custom Claims in OCI Identity Domains must be configured via the REST API - there is no UI option in the OCI Console. See the official Oracle documentation: [Managing Custom Claims](https://docs.oracle.com/en-us/iaas/Content/Identity/api-getstarted/custom-claims-token.htm)
 
-1. Use the helper script provided in this project:
+1. Use the helper script provided in this project. Set your Identity Domain URL (from OCI Console → Identity → Domains → Domain URL):
    ```bash
-   # Set your Identity Domain URL (from OCI Console → Identity → Domains → Domain URL)
    export OCI_IAM_BASE_URL="https://idcs-xxxx.identity.oraclecloud.com"
+   ```
 
-   # Run the script (uses OCI_IAM_BASE_URL environment variable)
+   Run the script (uses OCI_IAM_BASE_URL environment variable):
+   ```bash
    python scripts/create_groups_claim.py
    ```
 
@@ -740,12 +803,14 @@ For more details on Custom Claims and why they are needed, see [FAQ: What are Cu
 
 ### 6.5 Update Client Credentials Secret
 
+Set the client credentials from step 6.3:
 ```bash
-# Set the client credentials from step 6.3
 export CLIENT_ID=<your-client-id>
 export CLIENT_SECRET=<your-client-secret>
+```
 
-# Update secret with actual credentials
+Update secret with actual credentials:
+```bash
 oci vault secret update-base64 \
   --secret-id $CLIENT_CREDS_SECRET_OCID \
   --secret-content-content "$(echo -n "{\"client_id\":\"$CLIENT_ID\",\"client_secret\":\"$CLIENT_SECRET\"}" | base64)"
@@ -783,15 +848,17 @@ export DG_OCID=<dynamic-group-ocid>
 
 ### 7.2 Create Policies
 
+**Policy for functions to read secrets:**
 ```bash
-# Policy for functions to read secrets
 oci iam policy create \
   --compartment-id $COMPARTMENT_OCID \
   --name "oidc-functions-vault-access" \
   --description "Allow OIDC functions to read secrets" \
   --statements '["Allow dynamic-group oidc-functions-dg to read secret-bundles in compartment id '$COMPARTMENT_OCID'"]'
+```
 
-# Policy for API Gateway to invoke functions
+**Policy for API Gateway to invoke functions:**
+```bash
 oci iam policy create \
   --compartment-id $COMPARTMENT_OCID \
   --name "apigw-functions-invoke" \
@@ -910,12 +977,13 @@ For testing, deploy a simple backend:
 
 ### 9.1 Create Compute Instance
 
+Get the first availability domain:
 ```bash
-# Get the first availability domain
 export AVAILABILITY_DOMAIN=$(oci iam availability-domain list --compartment-id $COMPARTMENT_OCID | jq -r '.data[0].name')
+```
 
-# Get Oracle Linux 8 image OCID for your region
-# Note: Images are in the tenancy root compartment
+Get Oracle Linux 8 image OCID for your region (note: images are in the tenancy root compartment):
+```bash
 export BACKEND_IMAGE_OCID=$(oci compute image list \
   --compartment-id $TENANCY_OCID \
   --operating-system "Oracle Linux" \
@@ -924,8 +992,10 @@ export BACKEND_IMAGE_OCID=$(oci compute image list \
   --sort-order DESC \
   --limit 1 \
   | jq -r '.data[0].id')
+```
 
-# Launch instance
+Launch the instance:
+```bash
 oci compute instance launch \
   --compartment-id $COMPARTMENT_OCID \
   --display-name "apigw-oidc-backend" \
@@ -936,7 +1006,10 @@ oci compute instance launch \
   --image-id "$BACKEND_IMAGE_OCID" \
   --assign-public-ip false \
   --ssh-authorized-keys-file ~/.ssh/id_rsa.pub
+```
 
+Set the backend instance OCID:
+```bash
 export BACKEND_INSTANCE_OCID=<backend-instance-ocid>
 ```
 
@@ -944,19 +1017,22 @@ export BACKEND_INSTANCE_OCID=<backend-instance-ocid>
 
 SSH into the instance and run:
 
+Install and start Apache:
 ```bash
 sudo dnf install -y httpd
 sudo systemctl enable --now httpd
+```
 
-# Create test pages
+Create test pages:
+```bash
 echo "<h1>Welcome</h1>" | sudo tee /var/www/html/index.html
 echo "<h1>Logged Out</h1>" | sudo tee /var/www/html/logged-out.html
 ```
 
 ### 9.3 Get Backend IP Address
 
+Get the private IP of the backend instance:
 ```bash
-# Get the private IP of the backend instance
 export BACKEND_IP=$(oci compute instance list-vnics \
   --instance-id $BACKEND_INSTANCE_OCID \
   | jq -r '.data[0]["private-ip"]')
@@ -966,10 +1042,10 @@ echo "Backend IP: $BACKEND_IP"
 
 ### 9.4 Update API Deployment
 
-Now that the backend is deployed, regenerate the deployment JSON and update the API Gateway:
+Now that the backend is deployed, regenerate the deployment JSON and update the API Gateway.
 
+Regenerate api_deployment.json with actual BACKEND_IP (see Section 5.3 Step 2):
 ```bash
-# Regenerate api_deployment.json with actual BACKEND_IP (see Section 5.3 Step 2)
 sed -e "s|<apigw-authzr-fn-ocid>|$AUTHZR_FN_OCID|g" \
     -e "s|<health-fn-ocid>|$HEALTH_FN_OCID|g" \
     -e "s|<oidc-authn-fn-ocid>|$OIDC_AUTHN_FN_OCID|g" \
@@ -977,8 +1053,10 @@ sed -e "s|<apigw-authzr-fn-ocid>|$AUTHZR_FN_OCID|g" \
     -e "s|<oidc-logout-fn-ocid>|$OIDC_LOGOUT_FN_OCID|g" \
     -e "s|<backend-ip>|$BACKEND_IP|g" \
     scripts/api_deployment.template.json > scripts/api_deployment.json
+```
 
-# Update the deployment
+Update the deployment:
+```bash
 oci api-gateway deployment update \
   --deployment-id $DEPLOYMENT_OCID \
   --specification file://scripts/api_deployment.json \
@@ -999,8 +1077,8 @@ Expected: `{"status": "healthy", ...}`
 
 ### 10.2 Login Flow
 
+Check login redirect:
 ```bash
-# Check login redirect
 curl -sI $GATEWAY_URL/auth/login | grep Location
 ```
 
@@ -1033,21 +1111,19 @@ OCI Functions experience "cold starts" when containers are stopped after idle pe
 
 Use OCI Resource Scheduler to invoke functions on a schedule. See [Appendix A in TROUBLESHOOTING.md](./TROUBLESHOOTING.md#appendix-a-setting-up-oci-resource-scheduler) for detailed setup instructions.
 
-**Summary:**
-```bash
-# Create a schedule that invokes health and oidc_authn every 5-10 minutes
-# This keeps the most critical functions warm
-```
+**Summary:** Create a schedule that invokes health and oidc_authn every 5-10 minutes. This keeps the most critical functions warm.
 
 ### Option 2: Cron Job on Compute Instance
 
-If you have a compute instance (e.g., the Apache backend), add a cron job:
+If you have a compute instance (e.g., the Apache backend), add a cron job.
 
+Edit crontab:
 ```bash
-# Edit crontab
 crontab -e
+```
 
-# Add warmup calls every 5 minutes
+Add warmup calls every 5 minutes:
+```
 */5 * * * * curl -s https://<gateway-url>/health > /dev/null 2>&1
 */5 * * * * curl -s -o /dev/null -w '' https://<gateway-url>/auth/login > /dev/null 2>&1
 ```
@@ -1080,12 +1156,10 @@ If using an OCI Load Balancer in front of API Gateway, configure the backend hea
 
 ### Option 5: Post-Deployment Warmup Script
 
-Add a warmup step to your CI/CD pipeline after deploying functions:
+Add a warmup step to your CI/CD pipeline after deploying functions. Create a script like `warmup.sh`:
 
 ```bash
 #!/bin/bash
-# warmup.sh - Run after function deployment
-
 GATEWAY_URL="https://<gateway-url>"
 
 echo "Warming up functions..."
