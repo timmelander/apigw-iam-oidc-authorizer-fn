@@ -720,6 +720,10 @@ To include user profile data in tokens:
 
 1. Use the helper script provided in this project:
    ```bash
+   # Set your Identity Domain URL (from OCI Console → Identity → Domains → Domain URL)
+   export OCI_IAM_BASE_URL="https://idcs-xxxx.identity.oraclecloud.com"
+
+   # Run the script (uses OCI_IAM_BASE_URL environment variable)
    python scripts/create_groups_claim.py
    ```
 

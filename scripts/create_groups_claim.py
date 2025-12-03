@@ -6,14 +6,31 @@ OCI Identity Domain doesn't include groups in tokens by default.
 This script creates a Custom Claim that adds groups to the ID token.
 
 Reference: https://docs.oracle.com/en-us/iaas/Content/Identity/api-getstarted/custom-claims-token.htm
+
+Usage:
+    # Set environment variable first (recommended)
+    export OCI_IAM_BASE_URL="https://idcs-xxxx.identity.oraclecloud.com"
+    python scripts/create_groups_claim.py
+
+    # Or pass as command line argument
+    python scripts/create_groups_claim.py --domain-url https://idcs-xxxx.identity.oraclecloud.com
+
+    # List existing claims
+    python scripts/create_groups_claim.py list
 """
 
 import oci
 import requests
 import json
+import os
+import argparse
 
-# Configuration
-IDENTITY_DOMAIN_URL = "https://idcs-b7ad140e95da45789be287098edc90f5.identity.oraclecloud.com"
+def get_identity_domain_url():
+    """Get Identity Domain URL from environment or raise error."""
+    url = os.environ.get("OCI_IAM_BASE_URL")
+    if url:
+        return url.rstrip("/")
+    return None
 
 def get_access_token():
     """Get access token using OCI config for Identity Domain admin API."""
@@ -26,7 +43,7 @@ def get_access_token():
 
     return config
 
-def create_groups_claim():
+def create_groups_claim(identity_domain_url):
     """Create custom claim for groups in ID token."""
 
     config = oci.config.from_file()
@@ -41,7 +58,7 @@ def create_groups_claim():
     )
 
     # Custom Claims endpoint
-    endpoint = f"{IDENTITY_DOMAIN_URL}/admin/v1/CustomClaims"
+    endpoint = f"{identity_domain_url}/admin/v1/CustomClaims"
 
     # Custom claim payload to include groups in ID token
     # Expression $(user.groups[*].display) returns all group display names
@@ -86,7 +103,7 @@ def create_groups_claim():
             print("\nNote: You may need to use OAuth2 client credentials instead of OCI API signature.")
             print("Try using the OCI Console: Identity & Security > Domains > [Your Domain] > Settings")
 
-def list_custom_claims():
+def list_custom_claims(identity_domain_url):
     """List existing custom claims."""
     config = oci.config.from_file()
 
@@ -98,7 +115,7 @@ def list_custom_claims():
         pass_phrase=config.get("pass_phrase")
     )
 
-    endpoint = f"{IDENTITY_DOMAIN_URL}/admin/v1/CustomClaims"
+    endpoint = f"{identity_domain_url}/admin/v1/CustomClaims"
 
     headers = {
         "Accept": "application/json"
@@ -126,10 +143,44 @@ def list_custom_claims():
         print(f"Response: {response.text}")
 
 if __name__ == "__main__":
-    import sys
+    parser = argparse.ArgumentParser(
+        description="Create Custom Claims for OCI Identity Domain"
+    )
+    parser.add_argument(
+        "action",
+        nargs="?",
+        default="create",
+        choices=["create", "list"],
+        help="Action to perform (default: create)"
+    )
+    parser.add_argument(
+        "--domain-url",
+        help="Identity Domain URL (or set OCI_IAM_BASE_URL env var)"
+    )
 
-    if len(sys.argv) > 1 and sys.argv[1] == "list":
-        list_custom_claims()
+    args = parser.parse_args()
+
+    # Get Identity Domain URL from args or environment
+    identity_domain_url = args.domain_url or get_identity_domain_url()
+
+    if not identity_domain_url:
+        print("ERROR: Identity Domain URL not provided.")
+        print()
+        print("Set the OCI_IAM_BASE_URL environment variable:")
+        print("  export OCI_IAM_BASE_URL=\"https://idcs-xxxx.identity.oraclecloud.com\"")
+        print()
+        print("Or pass it as an argument:")
+        print("  python scripts/create_groups_claim.py --domain-url https://idcs-xxxx.identity.oraclecloud.com")
+        print()
+        print("You can find your Identity Domain URL in OCI Console:")
+        print("  Identity & Security → Domains → [Your Domain] → Domain URL")
+        exit(1)
+
+    print(f"Using Identity Domain: {identity_domain_url}")
+    print()
+
+    if args.action == "list":
+        list_custom_claims(identity_domain_url)
     else:
         print("=" * 60)
         print("OCI Identity Domain - Create Groups Custom Claim")
@@ -138,10 +189,10 @@ if __name__ == "__main__":
 
         # First list existing claims
         print("Checking existing custom claims...")
-        list_custom_claims()
+        list_custom_claims(identity_domain_url)
 
         print()
         print("-" * 60)
         print("Creating groups custom claim...")
         print("-" * 60)
-        create_groups_claim()
+        create_groups_claim(identity_domain_url)
