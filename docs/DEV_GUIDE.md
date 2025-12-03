@@ -1,6 +1,6 @@
-# Development Guide
+# Dev Guide
 
-This guide explains how to modify, extend, and test the OCI API Gateway + OIDC Authentication solution.
+This guide covers the code structure, local development, testing, and how to extend the OCI API Gateway + OIDC Authentication solution.
 
 ## Project Structure
 
