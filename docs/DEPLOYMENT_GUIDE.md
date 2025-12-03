@@ -73,7 +73,7 @@ Your user needs permissions to create/manage the following resources. If you're 
 - Functions Application and Functions
 - OCI Cache (Redis)
 - Vault and Secrets
-- Identity Domain and Confidential Applications
+- Identity Domain and Confidential Applications (can be the Default Identity Domain or a secondary Identity Domain)
 - Dynamic Groups and Policies
 
 **Recommended approach for non-administrators:**
@@ -670,11 +670,17 @@ oci api-gateway deployment get --deployment-id $DEPLOYMENT_OCID | jq -r '.data.s
 
 ## Phase 6: Identity Domain Configuration
 
+This phase configures the OCI IAM Identity Domain you'll use for authentication. This can be:
+- **Default Identity Domain**: Every OCI tenancy has one, suitable for most deployments
+- **Secondary Identity Domain**: A separate domain you've created for isolation or testing
+
+Use the Identity Domain associated with the compartment you've been working in throughout this guide.
+
 ### 6.1 Create Confidential Application
 
 In OCI Console:
 
-1. Navigate to **Identity & Security** → **Domains** → Your Domain
+1. Navigate to **Identity & Security** → **Domains** → Select your Identity Domain
 2. Click **Integrated applications** → **Add application**
 3. Select **Confidential Application**
 4. Click **Launch workflow**
