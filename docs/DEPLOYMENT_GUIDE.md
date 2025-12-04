@@ -1002,18 +1002,18 @@ Expected: `{"status": "healthy", ...}`
 
 Check login redirect:
 ```bash
-curl -sI "$GATEWAY_URL/auth/login" | grep Location
+curl -si "$GATEWAY_URL/auth/login" | grep -i location
 ```
 
-Expected: `Location: https://idcs-....identity.oraclecloud.com/oauth2/v1/authorize?...`
+Expected: `location: https://idcs-....identity.oraclecloud.com/oauth2/v1/authorize?...`
 
 ### 10.3 Protected Route (Unauthenticated)
 
 ```bash
-curl -sI "$GATEWAY_URL/welcome" | grep -E "HTTP|Location"
+curl -si "$GATEWAY_URL/welcome" | grep -iE "HTTP|location"
 ```
 
-Expected: `HTTP/2 302` and `Location: /auth/login`
+Expected: `HTTP/2 302` and `location: /auth/login`
 
 ### 10.4 Full Flow Test
 
