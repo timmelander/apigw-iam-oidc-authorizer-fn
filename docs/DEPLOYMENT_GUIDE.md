@@ -986,10 +986,15 @@ oci api-gateway deployment update \
 
 ## Phase 10: Verification
 
+> **Note:** If starting a new shell session, run the [Pre-fetch commands in Phase 8](#phase-8-configure-functions) first, or set `GATEWAY_URL` directly:
+> ```bash
+> export GATEWAY_URL=$(oci api-gateway deployment list --compartment-id $COMPARTMENT_OCID --all --query "data.items[?\"display-name\"=='apigw-oidc-deployment'].endpoint | [0]" --raw-output | sed 's:/$::')
+> ```
+
 ### 10.1 Health Check
 
 ```bash
-curl -s $GATEWAY_URL/health | jq
+curl -s "$GATEWAY_URL/health" | jq
 ```
 
 Expected: `{"status": "healthy", ...}`
@@ -998,7 +1003,7 @@ Expected: `{"status": "healthy", ...}`
 
 Check login redirect:
 ```bash
-curl -sI $GATEWAY_URL/auth/login | grep Location
+curl -sI "$GATEWAY_URL/auth/login" | grep Location
 ```
 
 Expected: `Location: https://idcs-....identity.oraclecloud.com/oauth2/v1/authorize?...`
@@ -1006,7 +1011,7 @@ Expected: `Location: https://idcs-....identity.oraclecloud.com/oauth2/v1/authori
 ### 10.3 Protected Route (Unauthenticated)
 
 ```bash
-curl -sI $GATEWAY_URL/welcome | grep -E "HTTP|Location"
+curl -sI "$GATEWAY_URL/welcome" | grep -E "HTTP|Location"
 ```
 
 Expected: `HTTP/2 302` and `Location: /auth/login`
