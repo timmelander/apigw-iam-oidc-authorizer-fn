@@ -823,10 +823,12 @@ export SUPPRESS_LABEL_WARNING=True
 
 export OCI_IAM_BASE_URL=$(oci iam domain list --compartment-id $TENANCY_OCID --all --query 'data[0].url' --raw-output)
 export FN_APP_OCID=$(oci fn application list --compartment-id $COMPARTMENT_OCID --all --display-name "apigw-oidc-app" --query 'data[0].id' --raw-output)
+export HEALTH_FN_OCID=$(oci fn function list --application-id $FN_APP_OCID --all --query 'data[?"display-name"==`health`].id | [0]' --raw-output)
 export OIDC_AUTHN_FN_OCID=$(oci fn function list --application-id $FN_APP_OCID --all --query 'data[?"display-name"==`oidc_authn`].id | [0]' --raw-output)
 export OIDC_CALLBACK_FN_OCID=$(oci fn function list --application-id $FN_APP_OCID --all --query 'data[?"display-name"==`oidc_callback`].id | [0]' --raw-output)
 export OIDC_LOGOUT_FN_OCID=$(oci fn function list --application-id $FN_APP_OCID --all --query 'data[?"display-name"==`oidc_logout`].id | [0]' --raw-output)
 export AUTHZR_FN_OCID=$(oci fn function list --application-id $FN_APP_OCID --all --query 'data[?"display-name"==`apigw_authzr`].id | [0]' --raw-output)
+export DEPLOYMENT_OCID=$(oci api-gateway deployment list --compartment-id $COMPARTMENT_OCID --all --query "data.items[?\"display-name\"=='${APIGW_DEPLOYMENT_NAME}'].id | [0]" --raw-output)
 export GATEWAY_URL=$(oci api-gateway deployment list --compartment-id $COMPARTMENT_OCID --all --query "data.items[?\"display-name\"=='${APIGW_DEPLOYMENT_NAME}'].endpoint | [0]" --raw-output | sed 's:/$::')
 export VAULT_OCID=$(oci kms management vault list --compartment-id $COMPARTMENT_OCID --all --query 'data[?contains("display-name", `apigw-oidc`)].id | [0]' --raw-output)
 export CLIENT_CREDS_SECRET_OCID=$(oci vault secret list --compartment-id $COMPARTMENT_OCID --vault-id $VAULT_OCID --all --name "oidc_client_credentials" --query 'data[0].id' --raw-output)
@@ -837,10 +839,12 @@ export PRIVATE_SUBNET_OCID=$(oci network subnet list --compartment-id $COMPARTME
 
 echo "Identity Domain: $OCI_IAM_BASE_URL"
 echo "Gateway URL: $GATEWAY_URL"
+echo "Deployment OCID: $DEPLOYMENT_OCID"
 echo "Cache Endpoint: $CACHE_ENDPOINT"
 echo "Private Subnet: $PRIVATE_SUBNET_OCID"
 echo "Client Creds Secret: $CLIENT_CREDS_SECRET_OCID"
 echo "Pepper Secret: $PEPPER_SECRET_OCID"
+echo "Health: $HEALTH_FN_OCID"
 echo "OIDC Authn: $OIDC_AUTHN_FN_OCID"
 echo "OIDC Callback: $OIDC_CALLBACK_FN_OCID"
 echo "OIDC Logout: $OIDC_LOGOUT_FN_OCID"
