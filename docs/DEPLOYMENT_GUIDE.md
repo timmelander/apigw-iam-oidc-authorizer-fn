@@ -963,6 +963,8 @@ echo "Backend IP: $BACKEND_IP"
 
 ### 9.4 Update API Deployment
 
+> **Note:** If starting a new shell session, run the Pre-fetch commands in Phase 8 first to set required variables (`DEPLOYMENT_OCID`, `HEALTH_FN_OCID`, etc.).
+
 Now that the backend is deployed, regenerate the deployment JSON and update the API Gateway:
 
 ```bash
