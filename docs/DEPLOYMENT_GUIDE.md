@@ -986,14 +986,13 @@ oci api-gateway deployment update \
 
 ## Phase 10: Verification
 
-> **Note:** If starting a new shell session, run the [Pre-fetch commands in Phase 8](#phase-8-configure-functions) first, or set `GATEWAY_URL` directly:
-> ```bash
-> export GATEWAY_URL=$(oci api-gateway deployment list --compartment-id $COMPARTMENT_OCID --all --query "data.items[?\"display-name\"=='apigw-oidc-deployment'].endpoint | [0]" --raw-output | sed 's:/$::')
-> ```
+> **Note:** If starting a new shell session, run the [Pre-fetch commands in Phase 8](#phase-8-configure-functions) first to set required variables.
 
 ### 10.1 Health Check
 
 ```bash
+export GATEWAY_URL=$(oci api-gateway deployment list --compartment-id $COMPARTMENT_OCID --all --query "data.items[?\"display-name\"=='apigw-oidc-deployment'].endpoint | [0]" --raw-output | sed 's:/$::')
+
 curl -s "$GATEWAY_URL/health" | jq
 ```
 
