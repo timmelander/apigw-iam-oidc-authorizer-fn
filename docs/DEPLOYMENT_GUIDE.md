@@ -609,9 +609,7 @@ export BACKEND_INSTANCE_OCID=$(oci compute instance list \
   --lifecycle-state RUNNING \
   --query 'data[0].id' --raw-output)
 
-export BACKEND_IP=$(oci compute instance list-vnics \
-  --instance-id $BACKEND_INSTANCE_OCID \
-  | jq -r '.data[0]["private-ip"]')
+export BACKEND_IP=$(oci compute instance list-vnics --instance-id "$BACKEND_INSTANCE_OCID" --query 'data[0]."private-ip"' --raw-output)
 
 echo "Backend IP: $BACKEND_IP"
 ```
@@ -954,9 +952,7 @@ echo "<h1>Logged Out</h1>" | sudo tee /var/www/html/logged-out.html
 
 Get the private IP of the backend instance:
 ```bash
-export BACKEND_IP=$(oci compute instance list-vnics \
-  --instance-id $BACKEND_INSTANCE_OCID \
-  | jq -r '.data[0]["private-ip"]')
+export BACKEND_IP=$(oci compute instance list-vnics --instance-id "$BACKEND_INSTANCE_OCID" --query 'data[0]."private-ip"' --raw-output)
 
 echo "Backend IP: $BACKEND_IP"
 ```
