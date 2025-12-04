@@ -644,17 +644,17 @@ export DEPLOYMENT_OCID=$(oci api-gateway deployment list \
 if [ -n "$DEPLOYMENT_OCID" ] && [ "$DEPLOYMENT_OCID" != "null" ]; then
   echo "Deployment exists ($DEPLOYMENT_OCID). Updating..."
   oci api-gateway deployment update \
-    --deployment-id $DEPLOYMENT_OCID \
-    --specification file://scripts/api_deployment.json \
+    --deployment-id "$DEPLOYMENT_OCID" \
+    --specification "$(cat scripts/api_deployment.json)" \
     --force
 else
   echo "Creating new deployment..."
   oci api-gateway deployment create \
-    --compartment-id $COMPARTMENT_OCID \
-    --gateway-id $GATEWAY_OCID \
+    --compartment-id "$COMPARTMENT_OCID" \
+    --gateway-id "$GATEWAY_OCID" \
     --display-name "apigw-oidc-deployment" \
     --path-prefix "/" \
-    --specification file://scripts/api_deployment.json
+    --specification "$(cat scripts/api_deployment.json)"
 
   export DEPLOYMENT_OCID=$(oci api-gateway deployment list \
     --compartment-id $COMPARTMENT_OCID \
@@ -975,8 +975,8 @@ sed -e "s|<apigw-authzr-fn-ocid>|$AUTHZR_FN_OCID|g" \
     scripts/api_deployment.template.json > scripts/api_deployment.json
 
 oci api-gateway deployment update \
-  --deployment-id $DEPLOYMENT_OCID \
-  --specification file://scripts/api_deployment.json \
+  --deployment-id "$DEPLOYMENT_OCID" \
+  --specification "$(cat scripts/api_deployment.json)" \
   --force
 ```
 
