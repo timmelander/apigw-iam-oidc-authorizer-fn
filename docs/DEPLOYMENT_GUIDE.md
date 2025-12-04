@@ -917,22 +917,13 @@ For testing, deploy a simple backend:
 
 ### 9.1 Create Compute Instance
 
-Get the availability domain and Oracle Linux 10 image OCID, launch the instance, then set the instance OCID:
+Get the availability domain, Oracle Linux 10 image OCID (filtered for E5 shape compatibility), and launch the instance:
 
 ```bash
 export AVAILABILITY_DOMAIN=$(oci iam availability-domain list --compartment-id $COMPARTMENT_OCID --all | jq -r '.data[0].name')
+export BACKEND_IMAGE_OCID=$(oci compute image list --compartment-id $TENANCY_OCID --all --operating-system "Oracle Linux" --operating-system-version "10" --shape "VM.Standard.E5.Flex" --sort-by TIMECREATED --sort-order DESC | jq -r '.data[0].id')
 
-export BACKEND_IMAGE_OCID=$(oci compute image list \
-  --compartment-id $TENANCY_OCID \
-  --all \
-  --operating-system "Oracle Linux" \
-  --operating-system-version "10" \
-  --shape "VM.Standard.E5.Flex" \
-  --sort-by TIMECREATED \
-  --sort-order DESC \
-  | jq -r '.data[0].id')
-
-oci compute instance launch \
+export BACKEND_INSTANCE_OCID=$(oci compute instance launch \
   --compartment-id "$COMPARTMENT_OCID" \
   --display-name "apigw-oidc-backend" \
   --availability-domain "$AVAILABILITY_DOMAIN" \
@@ -941,9 +932,10 @@ oci compute instance launch \
   --subnet-id "$PRIVATE_SUBNET_OCID" \
   --image-id "$BACKEND_IMAGE_OCID" \
   --assign-public-ip false \
-  --ssh-authorized-keys-file ~/.ssh/id_rsa.pub
+  --ssh-authorized-keys-file ~/.ssh/id_rsa.pub \
+  | jq -r '.data.id')
 
-export BACKEND_INSTANCE_OCID=<backend-instance-ocid>
+echo "Instance OCID: $BACKEND_INSTANCE_OCID"
 ```
 
 ### 9.2 Install Apache
