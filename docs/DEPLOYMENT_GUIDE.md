@@ -927,6 +927,7 @@ export BACKEND_IMAGE_OCID=$(oci compute image list \
   --all \
   --operating-system "Oracle Linux" \
   --operating-system-version "10" \
+  --shape "VM.Standard.E5.Flex" \
   --sort-by TIMECREATED \
   --sort-order DESC \
   | jq -r '.data[0].id')
