@@ -813,7 +813,7 @@ oci iam policy create \
 ## Phase 8: Configure Functions
 
 <details>
-<summary><strong>Re-fetch variables if starting a new shell session</strong></summary>
+<summary><strong>Pre-fetch variables if starting a new shell session</strong></summary>
 
 Set your compartment and tenancy OCIDs, auto-fetch all variables, then verify:
 
