@@ -65,7 +65,7 @@ def get_redis_client():
         port=6379,
         ssl=True,
         ssl_cert_reqs="required",
-        decode_responses=False
+        decode_responses=True
     )
 
 
@@ -101,8 +101,8 @@ def handler(ctx, data: io.BytesIO = None):
             'code_verifier': code_verifier,
             'nonce': nonce,
             'return_to': return_to
-        }).encode('utf-8')
-        r.set(f"state:{state}".encode('utf-8'), state_data, ex=STATE_TTL_SECONDS)
+        })
+        r.set(f"state:{state}", state_data, ex=STATE_TTL_SECONDS)
         r.close()
 
         # Get client_id from Vault
