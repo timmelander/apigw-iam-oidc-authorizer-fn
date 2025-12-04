@@ -835,10 +835,12 @@ export CLIENT_CREDS_SECRET_OCID=$(oci vault secret list --compartment-id $COMPAR
 export PEPPER_SECRET_OCID=$(oci vault secret list --compartment-id $COMPARTMENT_OCID --vault-id $VAULT_OCID --all --name "hkdf_pepper" --query 'data[0].id' --raw-output)
 export CACHE_OCID=${CACHE_OCID:-$(oci redis redis-cluster redis-cluster-summary list-redis-clusters --compartment-id $COMPARTMENT_OCID --all | jq -r '.data.items[] | select(."display-name" == "apigw-oidc-cache") | .id')}
 export CACHE_ENDPOINT=$(oci redis redis-cluster redis-cluster get --redis-cluster-id $CACHE_OCID | jq -r '.data["primary-fqdn"]')
+export PRIVATE_SUBNET_OCID=$(oci network subnet list --compartment-id $COMPARTMENT_OCID --all --display-name "private-subnet" --query 'data[0].id' --raw-output)
 
 echo "Identity Domain: $OCI_IAM_BASE_URL"
 echo "Gateway URL: $GATEWAY_URL"
 echo "Cache Endpoint: $CACHE_ENDPOINT"
+echo "Private Subnet: $PRIVATE_SUBNET_OCID"
 echo "Client Creds Secret: $CLIENT_CREDS_SECRET_OCID"
 echo "Pepper Secret: $PEPPER_SECRET_OCID"
 echo "OIDC Authn: $OIDC_AUTHN_FN_OCID"
