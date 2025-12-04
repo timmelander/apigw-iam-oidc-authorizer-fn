@@ -935,7 +935,7 @@ oci compute instance launch \
   --compartment-id "$COMPARTMENT_OCID" \
   --display-name "apigw-oidc-backend" \
   --availability-domain "$AVAILABILITY_DOMAIN" \
-  --shape "VM.Standard.E4.Flex" \
+  --shape "VM.Standard.E5.Flex" \
   --shape-config '{"ocpus": 1, "memoryInGBs": 8}' \
   --subnet-id "$PRIVATE_SUBNET_OCID" \
   --image-id "$BACKEND_IMAGE_OCID" \
