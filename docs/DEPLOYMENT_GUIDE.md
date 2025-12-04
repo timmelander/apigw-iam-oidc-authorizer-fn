@@ -930,12 +930,12 @@ export BACKEND_IMAGE_OCID=$(oci compute image list \
   | jq -r '.data[0].id')
 
 oci compute instance launch \
-  --compartment-id $COMPARTMENT_OCID \
+  --compartment-id "$COMPARTMENT_OCID" \
   --display-name "apigw-oidc-backend" \
   --availability-domain "$AVAILABILITY_DOMAIN" \
   --shape "VM.Standard.E4.Flex" \
   --shape-config '{"ocpus": 1, "memoryInGBs": 8}' \
-  --subnet-id $PRIVATE_SUBNET_OCID \
+  --subnet-id "$PRIVATE_SUBNET_OCID" \
   --image-id "$BACKEND_IMAGE_OCID" \
   --assign-public-ip false \
   --ssh-authorized-keys-file ~/.ssh/id_rsa.pub
