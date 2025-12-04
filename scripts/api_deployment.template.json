@@ -9,7 +9,7 @@
     "authentication": {
       "type": "CUSTOM_AUTHENTICATION",
       "functionId": "<apigw-authzr-fn-ocid>",
-      "isAnonymousAccessAllowed": true,
+      "isAnonymousAccessAllowed": false,
       "parameters": {
         "Cookie": "request.headers[Cookie]",
         "User-Agent": "request.headers[User-Agent]"
