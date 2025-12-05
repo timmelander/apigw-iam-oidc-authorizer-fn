@@ -54,11 +54,21 @@ def authorize_success(session_data: dict, session_id: str) -> dict:
     else:
         raw_claims_str = str(raw_claims) if raw_claims else ""
 
+    # Ensure principal is never None/empty (required by API Gateway)
+    principal = session_data.get("email") or session_data.get("sub") or "anonymous"
+
+    # Ensure expiresAt is a valid ISO datetime string
+    expires_at = session_data.get("exp", "")
+    if not expires_at:
+        # Set a default expiry 8 hours from now if not provided
+        from datetime import datetime, timedelta, timezone
+        expires_at = (datetime.now(timezone.utc) + timedelta(hours=8)).isoformat()
+
     return {
         "active": True,
-        "principal": session_data.get("email") or session_data.get("sub"),
+        "principal": principal,
         "scope": ["openid", "profile", "email"],
-        "expiresAt": session_data.get("exp", ""),
+        "expiresAt": expires_at,
         "context": {
             "sub": session_data.get("sub") or "",
             "email": session_data.get("email") or "",
@@ -85,18 +95,22 @@ def authorize_failure(reason: str = "invalid_token") -> dict:
 
 def handler(ctx, data: io.BytesIO = None):
     """Handle session authorization."""
+    logger.info("=== AUTHORIZER INVOKED ===")
     try:
         # Parse input
         body = {}
         if data:
             raw = data.getvalue()
+            logger.info(f"Raw input length: {len(raw) if raw else 0}")
             if raw:
                 try:
                     body = json.loads(raw)
+                    logger.info(f"Parsed body keys: {list(body.keys())}")
                 except json.JSONDecodeError:
                     logger.warning("Failed to parse request body as JSON")
 
         auth_data = body.get('data', body)
+        logger.info(f"auth_data keys: {list(auth_data.keys()) if isinstance(auth_data, dict) else 'not a dict'}")
 
         # Extract headers (handle both case variations)
         cookie_header = auth_data.get('Cookie', auth_data.get('cookie', ''))
@@ -153,17 +167,22 @@ def handler(ctx, data: io.BytesIO = None):
                 headers={"Content-Type": "application/json"}
             )
 
+        logger.info(f"Session FOUND in cache, length: {len(encrypted_session)} bytes")
+
         # Get pepper from Vault
         try:
+            logger.info(f"Getting pepper, cached: {OCI_VAULT_PEPPER_OCID in _secrets_cache}")
             if OCI_VAULT_PEPPER_OCID not in _secrets_cache:
                 signer = oci.auth.signers.get_resource_principals_signer()
                 client = oci.secrets.SecretsClient({}, signer=signer)
                 resp = client.get_secret_bundle(OCI_VAULT_PEPPER_OCID)
                 content = resp.data.secret_bundle_content.content
                 _secrets_cache[OCI_VAULT_PEPPER_OCID] = base64.b64decode(content).decode('utf-8')
+                logger.info(f"Pepper loaded from Vault, length after first decode: {len(_secrets_cache[OCI_VAULT_PEPPER_OCID])}")
             pepper = base64.b64decode(_secrets_cache[OCI_VAULT_PEPPER_OCID])
+            logger.info(f"Pepper ready, length: {len(pepper)} bytes")
         except Exception as e:
-            logger.error(f"Failed to get pepper from Vault: {str(e)}")
+            logger.error(f"Failed to get pepper from Vault: {str(e)}", exc_info=True)
             return response.Response(
                 ctx,
                 response_data=json.dumps(authorize_failure("vault_error")),
@@ -173,6 +192,7 @@ def handler(ctx, data: io.BytesIO = None):
 
         # Decrypt session
         try:
+            logger.info("Starting session decryption...")
             # Derive key using HKDF
             hkdf = HKDF(
                 algorithm=hashes.SHA256(),
@@ -181,6 +201,7 @@ def handler(ctx, data: io.BytesIO = None):
                 info=b"session_encryption"
             )
             key = hkdf.derive(session_id.encode('utf-8'))
+            logger.info("Key derived successfully")
 
             # Decrypt with AES-GCM
             nonce = encrypted_session[:12]
@@ -188,8 +209,9 @@ def handler(ctx, data: io.BytesIO = None):
             aesgcm = AESGCM(key)
             plaintext = aesgcm.decrypt(nonce, ciphertext, None)
             session_data = json.loads(plaintext.decode('utf-8'))
+            logger.info(f"Session decrypted successfully, sub: {session_data.get('sub', 'N/A')}")
         except Exception as e:
-            logger.error(f"Failed to decrypt session: {str(e)}")
+            logger.error(f"Failed to decrypt session: {str(e)}", exc_info=True)
             return response.Response(
                 ctx,
                 response_data=json.dumps(authorize_failure("invalid_session")),
@@ -226,10 +248,16 @@ def handler(ctx, data: io.BytesIO = None):
         #         )
 
         # Success
-        logger.info(f"Session authorized for user: {session_data.get('sub', 'unknown')}")
+        logger.info(f"Building success response for user: {session_data.get('sub', 'unknown')}")
+        success_response = authorize_success(session_data, session_id)
+        logger.info(f"Success response principal: {success_response.get('principal')}")
+        logger.info(f"Success response expiresAt: {success_response.get('expiresAt')}")
+        response_json = json.dumps(success_response)
+        logger.info(f"Response JSON length: {len(response_json)}")
+        logger.info("=== RETURNING SUCCESS ===")
         return response.Response(
             ctx,
-            response_data=json.dumps(authorize_success(session_data, session_id)),
+            response_data=response_json,
             status_code=200,
             headers={"Content-Type": "application/json"}
         )

@@ -1,6 +1,6 @@
 schema_version: 20180708
 name: oidc_callback
-version: 0.0.19
+version: 0.0.20
 runtime: python
 build_image: fnproject/python:3.11-dev
 run_image: fnproject/python:3.11
