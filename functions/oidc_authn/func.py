@@ -65,7 +65,7 @@ def get_redis_client():
         port=6379,
         ssl=True,
         ssl_cert_reqs="required",
-        decode_responses=True
+        decode_responses=False
     )
 
 
