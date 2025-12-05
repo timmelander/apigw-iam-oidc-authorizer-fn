@@ -102,7 +102,7 @@ def handler(ctx, data: io.BytesIO = None):
             'nonce': nonce,
             'return_to': return_to
         })
-        r.set(f"state:{state}", state_data, ex=STATE_TTL_SECONDS)
+        r.set(f"state:{state}", state_data.encode('utf-8'), ex=STATE_TTL_SECONDS)
         r.close()
 
         # Get client_id from Vault
