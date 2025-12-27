@@ -2,6 +2,19 @@
 
 This document describes all configuration options for the OCI API Gateway + OIDC Authentication solution.
 
+## Table of Contents
+
+- [Environment Variables](#environment-variables)
+- [OCI Vault Secrets](#oci-vault-secrets)
+- [Identity Domain Configuration](#identity-domain-configuration)
+- [API Gateway Configuration](#api-gateway-configuration)
+- [Session Configuration](#session-configuration)
+- [Cache Configuration](#cache-configuration)
+- [Timeouts and Limits](#timeouts-and-limits)
+- [Updating Configuration](#updating-configuration)
+
+---
+
 ## Environment Variables
 
 ### oidc_authn Function
