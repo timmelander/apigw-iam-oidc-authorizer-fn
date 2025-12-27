@@ -129,6 +129,27 @@ The REST API allows you to:
 2. Map user attributes to token claims
 3. Configure which tokens include the claims (ID token, access token)
 
+### Session Settings (Identity Domain)
+
+OCI IAM Identity Domains have global session limit settings that affect all users. These are **separate from** the application-level `SESSION_TTL_SECONDS` configuration.
+
+| Setting | Valid Range | Behavior |
+|---------|-------------|----------|
+| **Session Duration** | 1 - 32,767 minutes | User's IdP session times out after this duration, **regardless of activity** |
+| **My Apps Idle Timeout** | 5 - 480 minutes | User is signed out of My Apps console due to **inactivity** |
+
+**Important:** The IdP session duration is an absolute limit. Even if your application's `SESSION_TTL_SECONDS` is set to 8 hours (28800s), users will be forced to re-authenticate when the Identity Domain session expires.
+
+**Recommendation:** Align your application's `SESSION_TTL_SECONDS` with the Identity Domain's session duration to provide a consistent user experience.
+
+**Configuration:**
+1. Navigate to **Identity & Security** → **Domains** → **[Your Domain]**
+2. Go to **Settings** → **Session settings**
+3. Configure **Session duration (in minutes)** and **My Apps idle timeout (in minutes)**
+4. Click **Save changes**
+
+See: [OCI IAM Session Limits Documentation](https://docs.oracle.com/en-us/iaas/Content/Identity/sessionsettings/session-limits.htm)
+
 ---
 
 ## API Gateway Configuration
