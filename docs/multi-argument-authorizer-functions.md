@@ -4,6 +4,18 @@
 
 **Research Date:** 2025-01-22
 
+## Table of Contents
+
+- [Overview](#overview)
+- [Request Format](#request-format)
+- [Response Format](#response-format)
+- [Available Context Variables](#available-context-variables)
+- [Configuration Example](#configuration-example)
+- [Cache Key Configuration](#cache-key-configuration)
+- [Testing Multi-Argument Functions](#testing-multi-argument-functions)
+- [Key Differences from Single-Argument](#key-differences-from-single-argument)
+- [References](#references)
+
 ---
 
 ## Overview

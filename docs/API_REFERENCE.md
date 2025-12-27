@@ -2,6 +2,19 @@
 
 This document describes all API endpoints exposed by the OCI API Gateway + OIDC Authentication solution.
 
+## Table of Contents
+
+- [Base URL](#base-url)
+- [Public Endpoints (No Authentication)](#public-endpoints-no-authentication)
+- [Protected Endpoints (Authentication Required)](#protected-endpoints-authentication-required)
+- [Authentication Details](#authentication-details)
+- [Error Responses](#error-responses)
+- [Rate Limits](#rate-limits)
+- [Testing with cURL](#testing-with-curl)
+- [OpenAPI Specification](#openapi-specification)
+
+---
+
 ## Base URL
 
 ```

@@ -2,6 +2,19 @@
 
 This document describes the security architecture, threat model, and production hardening recommendations.
 
+## Table of Contents
+
+- [Security Architecture](#security-architecture)
+- [Implemented Security Controls](#implemented-security-controls)
+- [Threat Model](#threat-model)
+- [Production Hardening](#production-hardening)
+- [Secret Rotation](#secret-rotation)
+- [Compliance Considerations](#compliance-considerations)
+- [Security Checklist](#security-checklist)
+- [Incident Response](#incident-response)
+
+---
+
 ## Security Architecture
 
 ### Defense in Depth

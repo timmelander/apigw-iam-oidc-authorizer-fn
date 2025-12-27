@@ -2,6 +2,18 @@
 
 This document describes the architecture of the OCI API Gateway + OIDC Authentication solution.
 
+## Table of Contents
+
+- [System Diagram](#system-diagram)
+- [Components](#components)
+- [Routing Strategy](#routing-strategy)
+- [Data Flow](#data-flow)
+- [Network Architecture](#network-architecture)
+- [Scalability](#scalability)
+- [High Availability](#high-availability)
+
+---
+
 ## System Diagram
 
 ```

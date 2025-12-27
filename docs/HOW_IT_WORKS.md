@@ -2,6 +2,17 @@
 
 This document explains the end-to-end authentication flows in detail.
 
+## Table of Contents
+
+- [Overview](#overview)
+- [Authentication Flows](#authentication-flows)
+- [Security Mechanisms](#security-mechanisms)
+- [Session Data Structure](#session-data-structure)
+- [User Claims Propagation](#user-claims-propagation)
+- [Error Handling](#error-handling)
+
+---
+
 ## Overview
 
 The solution implements **session-based authentication** using OIDC Authorization Code Flow with PKCE. Here's how a user goes from anonymous to authenticated:

@@ -2,6 +2,20 @@
 
 This document provides monthly cost estimates for running the OCI API Gateway + OIDC Authentication solution at different usage levels.
 
+## Table of Contents
+
+- [Assumptions](#assumptions)
+- [Function Invocations Per Login Session](#function-invocations-per-login-session)
+- [Warmup Invocations (Fixed Cost)](#warmup-invocations-fixed-cost)
+- [Monthly Cost Estimates](#monthly-cost-estimates)
+- [Cost Summary Table](#cost-summary-table)
+- [Fixed vs Variable Costs](#fixed-vs-variable-costs)
+- [Cost Optimization Tips](#cost-optimization-tips)
+- [Pricing References](#pricing-references)
+- [Excluded from Estimates](#excluded-from-estimates)
+
+---
+
 ## Assumptions
 
 | Assumption | Value | Notes |

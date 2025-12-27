@@ -2,6 +2,20 @@
 
 This guide is for developers who want to understand, modify, or extend the OCI API Gateway + OIDC Authentication solution. It covers the project structure, function architecture, local development setup, testing strategies, and how to add new features like custom claims or protected routes.
 
+## Table of Contents
+
+- [Project Structure](#project-structure)
+- [Function Architecture](#function-architecture)
+- [Local Development](#local-development)
+- [Adding New Features](#adding-new-features)
+- [Code Conventions](#code-conventions)
+- [Testing](#testing)
+- [Deployment](#deployment)
+- [Debugging](#debugging)
+- [Performance Considerations](#performance-considerations)
+
+---
+
 ## Project Structure
 
 ```
