@@ -190,6 +190,7 @@ BUILD & DEPLOY (Development Time)
 | [API Reference](./docs/API_REFERENCE.md) | All endpoints with request/response examples |
 | [FAQ](./docs/FAQ.md) | Frequently asked questions |
 | [Cost Estimate](./docs/COST_ESTIMATE.md) | Monthly cost estimates by usage tier |
+| [NIST 800-63B Gap Analysis](./docs/NIST-800-63B-GAP-ANALYSIS.md) | Session management compliance assessment |
 
 ### Reference
 
